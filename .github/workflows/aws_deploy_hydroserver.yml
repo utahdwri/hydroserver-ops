@@ -1,0 +1,17 @@
+name: Deploy HydroServer to AWS Cloud Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Enter a deployment environment name.'
+        required: true
+
+jobs:
+  print-hello-world:
+    runs-on: ubuntu-20.04
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Display Proxy Base URL
+        run: |
+          echo "Selected environment: ${{ vars.PROXY_BASE_URL }}"
