@@ -6,12 +6,55 @@ on:
       environment:
         description: 'Enter a deployment environment name.'
         required: true
+      version:
+        description: 'Choose a release tag to deploy, or leave blank to use the latest version.'
+        required: false
 
 jobs:
-  print-hello-world:
+  deploy-hydroserver:
     runs-on: ubuntu-20.04
     environment: ${{ github.event.inputs.environment }}
     steps:
-      - name: Display Proxy Base URL
-        run: |
-          echo "Selected environment: ${{ vars.PROXY_BASE_URL }}"
+      - name: Test
+        run : |
+          echo ${{ github.event.inputs.version || 'refs/tags/$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-front/releases/latest | jq -r ".tag_name")' }}
+      # - name: Checkout backend repo
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: hydroserver2/hydroserver-webapp-back
+      #     ref: ${{ github.event.inputs.version || 'refs/tags/$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-back/releases/latest | jq -r ".tag_name")' }}
+      #     path: backend
+    
+      # - name: Checkout frontend repo
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: hydroserver2/hydroserver-webapp-front
+      #     ref: ${{ github.event.inputs.version || 'refs/tags/$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-front/releases/latest | jq -r ".tag_name")' }}
+      #     path: frontend
+
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: 'us-east-1'
+
+      # - name: Create backend deployment package
+      #   run: zip -r deploy_package.zip backend
+
+      # - name: Upload deployment package to S3
+      #   run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-backend/deploy_package_${{ github.event.inputs.version }}.zip
+
+      # - name: Create ElasticBeanstalk Application Version
+      #   run: |
+      #     aws elasticbeanstalk create-application-version \
+      #     --application-name hydroserver-${{ github.event.inputs.environment }} \
+      #     --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-backend",S3Key="deploy_package_${{ github.event.inputs.version }}.zip" \
+      #     --version-label "${{ github.event.inputs.version }}" \
+      #     --description "HydroServer Version ${{ github.event.inputs.version }}"
+
+      # - name: Deploy ElasticBeanstalk Application Version
+      #   run: |
+      #     aws elasticbeanstalk update-environment \
+      #     --environment-name hydroserver-${{ github.event.inputs.environment }}-env \
+      #     --version-label "${{ github.event.inputs.version }}"
