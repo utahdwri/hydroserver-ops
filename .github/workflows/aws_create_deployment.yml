@@ -8,10 +8,33 @@ on:
         required: true
 
 jobs:
-  print-hello-world:
+  setup-deployment:
     runs-on: ubuntu-20.04
     environment: ${{ github.event.inputs.environment }}
+    defaults:
+      run:
+        working-directory: ./terraform/aws
     steps:
-      - name: Display Proxy Base URL
-        run: |
-          echo "Selected environment: ${{ vars.PROXY_BASE_URL }}"
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}"
+        continue-on-error: true
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      # - name: Terraform Apply
+      #   run: terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}"
