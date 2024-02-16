@@ -11,8 +11,9 @@ on:
         required: false
 
 jobs:
-  deploy-hydroserver:
-    runs-on: ubuntu-20.04
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     steps:
       - name: Checkout backend repo
@@ -21,7 +22,57 @@ jobs:
           repository: hydroserver2/hydroserver-webapp-back
           ref: refs/tags/${{ github.event.inputs.version || '$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-back/releases/latest | jq -r ".tag_name")' }}
           path: backend
-    
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Create backend deployment package
+        working-directory: ./backend
+        run: zip -r deploy_package.zip ./
+
+      - name: Upload deployment package to S3
+        working-directory: ./backend
+        run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-backend/deploy_package_${{ github.event.inputs.version }}.zip
+
+      - name: Create ElasticBeanstalk Application Version
+        run: |
+          aws elasticbeanstalk create-application-version \
+          --application-name hydroserver-${{ github.event.inputs.environment }} \
+          --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-backend",S3Key="deploy_package_${{ github.event.inputs.version }}.zip" \
+          --version-label "${{ github.event.inputs.version }}" \
+          --description "HydroServer Version ${{ github.event.inputs.version }}"
+
+      - name: Update ElasticBeanstalk Environment
+        run: |
+          aws elasticbeanstalk update-environment \
+          --environment-name hydroserver-${{ github.event.inputs.environment }}-env \
+          --version-label "${{ github.event.inputs.version }}"
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=ADMIN_EMAIL,Value=${{ vars.ADMIN_EMAIL }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=ALLOWED_HOSTS,Value=${{ vars.ALLOWED_HOSTS }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_ACCESS_KEY_ID,Value=${{ secrets.AWS_ACCESS_KEY_ID }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_SECRET_ACCESS_KEY,Value=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_STORAGE_BUCKET_NAME,Value=hydroserver-${{ github.event.inputs.environment }}-storage
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DATABASE_URL,Value=${{ secrets.DATABASE_URL }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEBUG,Value=${{ vars.DEBUG }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEPLOYED,Value=True
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_GOOGLE_CLIENT,Value=${{ secrets.OAUTH_GOOGLE_CLIENT }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_GOOGLE_SECRET,Value=${{ secrets.OAUTH_GOOGLE_SECRET }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_HYDROSHARE_CLIENT,Value=${{ secrets.OAUTH_HYDROSHARE_CLIENT }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_HYDROSHARE_SECRET,Value=${{ secrets.OAUTH_HYDROSHARE_SECRET }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_ORCID_CLIENT,Value=${{ secrets.OAUTH_ORCID_CLIENT }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_ORCID_SECRET,Value=${{ secrets.OAUTH_ORCID_SECRET }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=PROXY_BASE_URL,Value=${{ vars.PROXY_BASE_URL }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=SECRET_KEY,Value=${{ secrets.DJANGO_SECRET_KEY }}
+
+  deploy-frontend:
+    name: Build and Deploy Frontend
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
       - name: Checkout frontend repo
         uses: actions/checkout@v4
         with:
@@ -29,52 +80,43 @@ jobs:
           ref: refs/tags/${{ github.event.inputs.version || '$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-front/releases/latest | jq -r ".tag_name")' }}
           path: frontend
 
-      - name: Generate ALLOWED_HOSTS value
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Setup Node 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Configure Environment Variables
+        working-directory: ./frontend
         run: |
-          PROXY_BASE_URL=${{ vars.PROXY_BASE_URL }}
-          ALLOWED_HOSTS=$(echo $PROXY_BASE_URL | sed 's/^https\?:\/\///')
-          echo "::set-env name=ALLOWED_HOSTS::$ALLOWED_HOSTS"
-          echo "$ALLOWED_HOSTS"
+          cat << EOF > .env
+          VITE_APP_VERSION=${{ github.event.inputs.version || '$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-front/releases/latest | jq -r ".tag_name")' }}
+          VITE_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+          VITE_APP_GOOGLE_MAPS_API_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
+          VITE_APP_PROXY_BASE_URL=${{ secrets.PROXY_BASE_URL }}
+          EOF
 
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: 'us-east-1'
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
 
-      # - name: Create backend deployment package
-      #   run: zip -r deploy_package.zip backend
+      - name: Deploy to S3
+        working-directory: ./frontend
+        run: |
+          aws s3 sync ./dist s3://hydroserver-${{ github.event.inputs.environment }}-web/ --delete
 
-      # - name: Upload deployment package to S3
-      #   run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-backend/deploy_package_${{ github.event.inputs.version }}.zip
-
-      # - name: Create ElasticBeanstalk Application Version
-      #   run: |
-      #     aws elasticbeanstalk create-application-version \
-      #     --application-name hydroserver-${{ github.event.inputs.environment }} \
-      #     --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-backend",S3Key="deploy_package_${{ github.event.inputs.version }}.zip" \
-      #     --version-label "${{ github.event.inputs.version }}" \
-      #     --description "HydroServer Version ${{ github.event.inputs.version }}"
-
-      # - name: Deploy ElasticBeanstalk Application Version
-      #   run: |
-      #     aws elasticbeanstalk update-environment \
-      #     --environment-name hydroserver-${{ github.event.inputs.environment }}-env \
-      #     --version-label "${{ github.event.inputs.version }}"
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=ADMIN_EMAIL,Value=${{ vars.ADMIN_EMAIL }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=ALLOWED_HOSTS,Value="$ALLOWED_HOSTS"
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_ACCESS_KEY_ID,Value=${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_SECRET_ACCESS_KEY,Value=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_STORAGE_BUCKET_NAME,Value=hydroserver-${{ github.event.inputs.environment }}-storage
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DATABASE_URL,Value=${{ secrets.DATABASE_URL }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEBUG,Value=${{ vars.DEBUG }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEPLOYED,Value=True
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_GOOGLE_CLIENT,Value=${{ secrets.OAUTH_GOOGLE_CLIENT }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_GOOGLE_SECRET,Value=${{ secrets.OAUTH_GOOGLE_SECRET }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_HYDROSHARE_CLIENT,Value=${{ secrets.OAUTH_HYDROSHARE_CLIENT }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_HYDROSHARE_SECRET,Value=${{ secrets.OAUTH_HYDROSHARE_SECRET }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_ORCID_CLIENT,Value=${{ secrets.OAUTH_ORCID_CLIENT }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_ORCID_SECRET,Value=${{ secrets.OAUTH_ORCID_SECRET }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=PROXY_BASE_URL,Value=${{ vars.PROXY_BASE_URL }}
-      #     --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=SECRET_KEY,Value=${{ secrets.DJANGO_SECRET_KEY }}
+      - name: Invalidate CloudFront distribution cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
