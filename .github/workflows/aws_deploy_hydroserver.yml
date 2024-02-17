@@ -51,22 +51,22 @@ jobs:
           aws elasticbeanstalk update-environment \
           --environment-name hydroserver-${{ github.event.inputs.environment }}-env \
           --version-label "${{ github.event.inputs.version }}" \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=ADMIN_EMAIL,Value=${{ vars.ADMIN_EMAIL }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=ALLOWED_HOSTS,Value=${{ vars.ALLOWED_HOSTS }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_ACCESS_KEY_ID,Value=${{ secrets.AWS_ACCESS_KEY_ID }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_SECRET_ACCESS_KEY,Value=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_STORAGE_BUCKET_NAME,Value=hydroserver-${{ github.event.inputs.environment }}-storage \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DATABASE_URL,Value=${{ secrets.DATABASE_URL }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEBUG,Value=${{ vars.DEBUG }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEPLOYED,Value=True \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_GOOGLE_CLIENT,Value=${{ secrets.OAUTH_GOOGLE_CLIENT }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_GOOGLE_SECRET,Value=${{ secrets.OAUTH_GOOGLE_SECRET }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_HYDROSHARE_CLIENT,Value=${{ secrets.OAUTH_HYDROSHARE_CLIENT }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_HYDROSHARE_SECRET,Value=${{ secrets.OAUTH_HYDROSHARE_SECRET }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_ORCID_CLIENT,Value=${{ secrets.OAUTH_ORCID_CLIENT }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_ORCID_SECRET,Value=${{ secrets.OAUTH_ORCID_SECRET }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=PROXY_BASE_URL,Value=${{ vars.PROXY_BASE_URL }} \
-          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=SECRET_KEY,Value=${{ secrets.DJANGO_SECRET_KEY }}
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=ADMIN_EMAIL,Value='${{ vars.ADMIN_EMAIL }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=ALLOWED_HOSTS,Value='${{ vars.ALLOWED_HOSTS }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_ACCESS_KEY_ID,Value='${{ secrets.AWS_ACCESS_KEY_ID }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_SECRET_ACCESS_KEY,Value='${{ secrets.AWS_SECRET_ACCESS_KEY }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=AWS_STORAGE_BUCKET_NAME,Value='hydroserver-${{ github.event.inputs.environment }}-storage' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DATABASE_URL,Value='${{ secrets.DATABASE_URL }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEBUG,Value='${{ vars.DEBUG }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=DEPLOYED,Value='True' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_GOOGLE_CLIENT,Value='${{ secrets.OAUTH_GOOGLE_CLIENT }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_GOOGLE_SECRET,Value='${{ secrets.OAUTH_GOOGLE_SECRET }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_HYDROSHARE_CLIENT,Value='${{ secrets.OAUTH_HYDROSHARE_CLIENT }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_HYDROSHARE_SECRET,Value='${{ secrets.OAUTH_HYDROSHARE_SECRET }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_ORCID_CLIENT,Value='${{ secrets.OAUTH_ORCID_CLIENT }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=OAUTH_ORCID_SECRET,Value='${{ secrets.OAUTH_ORCID_SECRET }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=PROXY_BASE_URL,Value='${{ vars.PROXY_BASE_URL }}' \
+          --option-settings Namespace=aws:elasticbeanstalk:application:environment,OptionName=SECRET_KEY,Value='${{ secrets.DJANGO_SECRET_KEY }}'
 
   deploy-frontend:
     name: Build and Deploy Frontend
