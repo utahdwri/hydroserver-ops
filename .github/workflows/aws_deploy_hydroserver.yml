@@ -41,89 +41,56 @@ jobs:
       - name: Configure Environment Variables
         working-directory: ./backend
         run: |
-          cat << EOF > environment.json
-          [
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "ADMIN_EMAIL",
-              "Value": "${{ vars.ADMIN_EMAIL }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "ALLOWED_HOSTS",
-              "Value": "${{ vars.ALLOWED_HOSTS }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "AWS_ACCESS_KEY_ID",
-              "Value": "${{ secrets.AWS_ACCESS_KEY_ID }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "AWS_SECRET_ACCESS_KEY",
-              "Value": "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "AWS_STORAGE_BUCKET_NAME",
-              "Value": "hydroserver-${{ github.event.inputs.environment }}-storage"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "DATABASE_URL",
-              "Value": "${{ secrets.DATABASE_URL }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "DEBUG",
-              "Value": "${{ vars.DEBUG }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "DEPLOYED",
-              "Value": "True"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "OAUTH_GOOGLE_CLIENT",
-              "Value": "${{ secrets.OAUTH_GOOGLE_CLIENT }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "OAUTH_GOOGLE_SECRET",
-              "Value": "${{ secrets.OAUTH_GOOGLE_SECRET }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "OAUTH_HYDROSHARE_CLIENT",
-              "Value": "${{ secrets.OAUTH_HYDROSHARE_CLIENT }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "OAUTH_HYDROSHARE_SECRET",
-              "Value": "${{ secrets.OAUTH_HYDROSHARE_SECRET }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "OAUTH_ORCID_CLIENT",
-              "Value": "${{ secrets.OAUTH_ORCID_CLIENT }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "OAUTH_ORCID_SECRET",
-              "Value": "${{ secrets.OAUTH_ORCID_SECRET }}"
-            },            
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "PROXY_BASE_URL",
-              "Value": "${{ vars.PROXY_BASE_URL }}"
-            },
-            {
-              "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "SECRET_KEY",
-              "Value": "${{ secrets.DJANGO_SECRET_KEY }}"
-            }
-          ]
+          cat << EOF > environment.yaml
+          option_settings:
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: ADMIN_EMAIL
+              value: ${{ vars.ADMIN_EMAIL }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: ALLOWED_HOSTS
+              value: ${{ vars.ALLOWED_HOSTS }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: AWS_ACCESS_KEY_ID
+              value: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: AWS_SECRET_ACCESS_KEY
+              value: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: AWS_STORAGE_BUCKET_NAME
+              value: hydroserver-${{ github.event.inputs.environment }}-storage
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: DATABASE_URL
+              value: ${{ secrets.DATABASE_URL }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: DEBUG
+              value: ${{ vars.DEBUG }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: DEPLOYED
+              value: True
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: "OAUTH_GOOGLE_CLIENT
+              value: ${{ secrets.OAUTH_GOOGLE_CLIENT }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: OAUTH_GOOGLE_SECRET
+              value: ${{ secrets.OAUTH_GOOGLE_SECRET }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: OAUTH_HYDROSHARE_CLIENT
+              value: ${{ secrets.OAUTH_HYDROSHARE_CLIENT }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: OAUTH_HYDROSHARE_SECRET
+              value: ${{ secrets.OAUTH_HYDROSHARE_SECRET }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: OAUTH_ORCID_CLIENT
+              value: ${{ secrets.OAUTH_ORCID_CLIENT }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: OAUTH_ORCID_SECRET
+              value: ${{ secrets.OAUTH_ORCID_SECRET }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: PROXY_BASE_URL
+              value: ${{ vars.PROXY_BASE_URL }}
+            - namespace: aws:elasticbeanstalk:application:environment
+              option_name: SECRET_KEY
+              value: ${{ secrets.DJANGO_SECRET_KEY }}
           EOF
 
       - name: Create ElasticBeanstalk Application Version
