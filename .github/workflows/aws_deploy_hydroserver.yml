@@ -108,7 +108,7 @@ jobs:
           aws elasticbeanstalk update-environment \
           --environment-name hydroserver-${{ github.event.inputs.environment }}-env \
           --version-label "${{ github.event.inputs.version }}" \
-          --option-settings file://environment.json
+          --option-settings file://environment.yaml
 
   deploy-frontend:
     name: Build and Deploy Frontend
