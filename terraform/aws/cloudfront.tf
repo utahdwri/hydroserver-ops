@@ -59,11 +59,17 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "hydroserver-django"
     viewer_protocol_policy = "allow-all"
+
     forwarded_values {
       query_string = false
       cookies {
         forward = "none"
       }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn   = aws_cloudfront_function.hydroserver_x_forward_host.arn
     }
   }
 
@@ -73,11 +79,17 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "hydroserver-django"
     viewer_protocol_policy = "redirect-to-https"
+
     forwarded_values {
       query_string = false
       cookies {
         forward = "none"
       }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn   = aws_cloudfront_function.hydroserver_x_forward_host.arn
     }
   }
 
@@ -87,11 +99,17 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "hydroserver-django"
     viewer_protocol_policy = "redirect-to-https"
+
     forwarded_values {
       query_string = false
       cookies {
         forward = "none"
       }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn   = aws_cloudfront_function.hydroserver_x_forward_host.arn
     }
   }
 
@@ -121,6 +139,14 @@ resource "aws_cloudfront_function" "hydroserver_frontend_routing" {
   runtime = "cloudfront-js-1.0"
   comment = "Preserve Vue client-side routing."
   code    = file("${path.module}/frontend-routing.js")
+  publish = true
+}
+
+resource "aws_cloudfront_function" "hydroserver_x_forward_host" {
+  name    = "x-forwarded-host"
+  runtime = "cloudfront-js-1.0"
+  comment = "Include x-forwarded-host in the header."
+  code    = file("${path.module}/x-forwarded-host.js")
   publish = true
 }
 
@@ -162,7 +188,7 @@ resource "aws_wafv2_web_acl" "hydroserver_core_rules" {
         vendor_name = "AWS"
         rule_action_override {
           action_to_use {
-            allow {}
+            count {}
           }
           name = "SizeRestrictions_BODY"
         }
