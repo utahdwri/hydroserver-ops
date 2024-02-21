@@ -179,7 +179,7 @@ jobs:
           cat << EOF > .env
           VITE_APP_VERSION=${{ github.event.inputs.version || '$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-front/releases/latest | jq -r ".tag_name")' }}
           VITE_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
-          VITE_APP_GOOGLE_MAPS_API_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
+          VITE_APP_GOOGLE_MAPS_MAP_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
           VITE_APP_PROXY_BASE_URL=${{ secrets.PROXY_BASE_URL }}
           EOF
 
