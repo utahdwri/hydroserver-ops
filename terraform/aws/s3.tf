@@ -14,6 +14,10 @@ resource "aws_s3_bucket" "hydroserver_storage_bucket" {
   bucket = "hydroserver-${var.instance}-storage"
 }
 
+resource "aws_s3_bucket" "hydroserver_backend_bucket" {
+  bucket = "hydroserver-${var.instance}-backend"
+}
+
 # ------------------------------------------------ #
 # HydroServer S3 Restrict Public Access            #
 # ------------------------------------------------ #
@@ -38,6 +42,15 @@ resource "aws_s3_bucket_public_access_block" "hydroserver_static_bucket" {
 
 resource "aws_s3_bucket_public_access_block" "hydroserver_storage_bucket" {
   bucket = aws_s3_bucket.hydroserver_storage_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_public_access_block" "hydroserver_backend_bucket" {
+  bucket = aws_s3_bucket.hydroserver_backend_bucket.id
 
   block_public_acls       = true
   block_public_policy     = true
