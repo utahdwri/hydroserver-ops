@@ -6,6 +6,19 @@ on:
       environment:
         description: 'Enter a deployment environment name.'
         required: true
+      hydroserver-version: 
+        description: 'Enter a version of HydroServer to use. Leave blank to use the latest version.'
+        required: false
+      superuser-email:
+        description: 'Enter the email for the Django superuser.'
+        required: true
+      superuser-password:
+        description: 'Enter the password for the Django superuser.'
+        required: true
+      partition-interval:
+        description: 'Enter a partition interval in days. Default is 365.'
+        default: '365'
+        required: false
 
 jobs:
   setup-deployment:
@@ -15,14 +28,22 @@ jobs:
       run:
         working-directory: ./terraform/timescale
     env:
-      AWS_DEFAULT_REGION: "us-east-1"
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+      AWS_STORAGE_BUCKET_NAME: hydroserver-${{ github.event.inputs.environment }}-storage
+      
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
         with:
           ref: main
+
+      - name: Checkout Backend Repo
+        uses: actions/checkout@v4
+        with:
+          repository: hydroserver2/hydroserver-webapp-back
+          ref: refs/tags/${{ github.event.inputs.hydroserver-version || '$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-back/releases/latest | jq -r ".tag_name")' }}
+          path: backend
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -33,7 +54,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}"
+        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
         continue-on-error: true
 
       - name: Terraform Plan Status
@@ -41,4 +62,21 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}"
+        run: terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+
+      - name: Install Django Dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Database Setup Commands
+        working-directory: ./backend
+        run: |
+            python manage.py migrate &&
+            python manage.py configure_timescaledb --partition-interval-days ${{ github.event.inputs.partition-interval }} &&
+            python manage.py createsuperuser --noinput &&
+            python manage.py collectstatic --noinput
+        env:
+          DJANGO_SETTINGS_MODULE: hydroserver.settings
+          DATABASE_URL: $(terraform output -json | jq -r ".service_url.value")
