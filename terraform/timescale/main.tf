@@ -8,16 +8,16 @@ terraform {
   required_version = ">= 1.2.0"
 }
 
+variable "instance" {}
+variable "project_id" {}
+variable "access_key" {}
+variable "secret_key" {}
+
 provider "timescale" {
   project_id = var.project_id
   access_key = var.access_key
   secret_key = var.secret_key
 }
-
-variable "instance" {}
-variable "project_id" {}
-variable "access_key" {}
-variable "secret_key" {}
 
 resource "timescale_service" "hydroserver_timescale" {
   name        = "hydroserver-${var.instance}"
@@ -28,4 +28,12 @@ resource "timescale_service" "hydroserver_timescale" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+output "service_url" {
+  value = format("postgresql://tsdbadmin:%s@%s:%s/tsdb",
+    timescale_service.my-resource.password,
+    timescale_service.my-resource.hostname,
+    timescale_service.my-resource.port)
+  sensitive = true
 }
