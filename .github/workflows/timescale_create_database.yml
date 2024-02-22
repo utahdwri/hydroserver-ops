@@ -1,0 +1,44 @@
+name: Create HydroServer Timescale Cloud Database
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Enter a deployment environment name.'
+        required: true
+
+jobs:
+  setup-deployment:
+    runs-on: ubuntu-20.04
+    environment: ${{ github.event.inputs.environment }}
+    defaults:
+      run:
+        working-directory: ./terraform/timescale
+    env:
+      AWS_DEFAULT_REGION: "us-east-1"
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}"
+        continue-on-error: true
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}"
