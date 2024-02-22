@@ -9,9 +9,12 @@ terraform {
 }
 
 provider "timescale" {
-  project_id = var.ts_project_id
-  access_key = var.ts_access_key
-  secret_key = var.ts_secret_key
+  project_id = var.project_id
+  access_key = var.access_key
+  secret_key = var.secret_key
 }
 
 variable "instance" {}
+variable "project_id" {}
+variable "access_key" {}
+variable "secret_key" {}
