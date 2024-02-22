@@ -9,6 +9,12 @@ on:
       version:
         description: 'Choose a release tag to deploy, or leave blank to use the latest version.'
         required: false
+      enable_timescale:
+        description: 'Enable TimescaleDB. ('
+        required: true
+        default: true
+        # Setting `type` to `boolean` makes the input a boolean type
+        type: boolean
 
 jobs:
   deploy-backend:
@@ -133,7 +139,8 @@ jobs:
           --application-name hydroserver-${{ github.event.inputs.environment }} \
           --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-backend",S3Key="deploy_package_${{ github.event.inputs.version }}.zip" \
           --version-label "${{ github.event.inputs.version }}" \
-          --description "HydroServer Version ${{ github.event.inputs.version }}"
+          --description "HydroServer Version ${{ github.event.inputs.version }}" \
+          --auto-create-application
 
       - name: Update ElasticBeanstalk Environment
         working-directory: ./backend
