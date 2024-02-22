@@ -18,3 +18,14 @@ variable "instance" {}
 variable "project_id" {}
 variable "access_key" {}
 variable "secret_key" {}
+
+resource "timescale_service" "hydroserver_timescale" {
+  name        = "hydroserver-${var.instance}"
+  milli_cpu   = 500
+  memory_gb   = 2
+  region_code = "us-east-1"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
