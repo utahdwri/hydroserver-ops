@@ -34,10 +34,17 @@ resource "timescale_service" "hydroserver_timescale" {
   }
 }
 
-output "service_url" {
-  value = format("postgresql://tsdbadmin:%s@%s:%s/tsdb",
-    timescale_service.hydroserver_timescale.password,
-    timescale_service.hydroserver_timescale.hostname,
-    timescale_service.hydroserver_timescale.port)
+output "hostname" {
+  value=timescale_service.hydroserver_timescale.hostname
+  sensitive = true
+}
+
+output "port" {
+  value=timescale_service.hydroserver_timescale.port
+  sensitive = true
+}
+
+output "password" {
+  value=timescale_service.hydroserver_timescale.password
   sensitive = true
 }
