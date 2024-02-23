@@ -16,7 +16,7 @@ on:
         description: 'Enter the password for the Django superuser.'
         required: true
       partition-interval:
-        description: 'Enter a partition interval in days. Default is 365.'
+        description: 'Enter a partition interval in days.'
         default: '365'
         required: false
 
@@ -69,6 +69,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: TEST CONNECTION STRING
+        run: |
+          echo terraform output -json | jq -r ".service_url.value"
 
       - name: Run Database Setup Commands
         working-directory: ./backend
