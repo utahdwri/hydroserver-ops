@@ -63,7 +63,8 @@ jobs:
 
       - name: Terraform Apply
         id: terraform_apply
-        run: terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+        run: |
+          terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
 
       - name: Install Django Dependencies
         working-directory: ./backend
@@ -74,10 +75,8 @@ jobs:
 
       - name: Set up Django Settings
         working-directory: ./backend
-        env:
-          DATABASE_URL: "postgresql://tsdbadmin:${{ steps.terraform_apply.outputs.password }}@${{ steps.terraform_apply.outputs.hostname }}:${{ steps.terraform_apply.outputs.port }}/tsdb"
         run: |
-          echo "DATABASE_URL=$DATABASE_URL" > .env
+          echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -json | jq -r ".password.value")@$(terraform output -json | jq -r ".hostname.value"):$(terraform output -json | jq -r ".port.value")/tsdb" > .env
           cat .env
           
       - name: Run Database Setup Commands
