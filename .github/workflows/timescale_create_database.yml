@@ -76,7 +76,7 @@ jobs:
       - name: Set up Django Settings
         working-directory: ./backend
         run: |
-          echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -json | jq -r ".password.value")@$(terraform output -json | jq -r ".hostname.value"):$(terraform output -json | jq -r ".port.value")/tsdb" > .env
+          echo "DATABASE_URL=postgresql://tsdbadmin:n@m:$(terraform output -json | jq -r ".port.value")/tsdb" > .env
           cat .env
           
       - name: Run Database Setup Commands
