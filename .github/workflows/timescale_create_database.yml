@@ -75,7 +75,10 @@ jobs:
       - name: Run Database Setup Commands
         working-directory: ./backend
         run: |
-            echo "DATABASE_URL: $DATABASE_URL"
+          python manage.py migrate
+          python manage.py configure_timescaledb --partition-interval-days ${{ github.event.inputs.partition-interval }}
+          python manage.py createsuperuser --noinput
+          python manage.py collectstatic --noinput
         env:
           DJANGO_SETTINGS_MODULE: hydroserver.settings
           DATABASE_URL: "postgresql://tsdbadmin:${{ steps.terraform_apply.outputs.password }}@${{ steps.terraform_apply.outputs.hostname }}:${{ steps.terraform_apply.outputs.port }}/tsdb"
