@@ -59,13 +59,8 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "hydroserver-django"
     viewer_protocol_policy = "allow-all"
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
+    cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
 
     function_association {
       event_type   = "viewer-request"
@@ -79,13 +74,8 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "hydroserver-django"
     viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
+    cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
 
     function_association {
       event_type   = "viewer-request"
@@ -99,13 +89,8 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "hydroserver-django"
     viewer_protocol_policy = "redirect-to-https"
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
+    cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
 
     function_association {
       event_type   = "viewer-request"
@@ -133,6 +118,14 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
 # ------------------------------------------------ #
 # HydroServer CloudFront Access Controls           #
 # ------------------------------------------------ #
+
+data "aws_cloudfront_cache_policy" "cdn_managed_caching_disabled_cache_policy" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_origin_request_policy" "cdn_managed_all_viewer_origin_request_policy" {
+  name = "Managed-AllViewer"
+}
 
 resource "aws_cloudfront_function" "hydroserver_frontend_routing" {
   name    = "frontend-routing"
