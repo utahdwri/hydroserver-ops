@@ -72,7 +72,7 @@ jobs:
 
       - name: TEST CONNECTION STRING
         run: |
-          terraform output -json | jq .
+          terraform output -raw service_url
           
       - name: Run Database Setup Commands
         working-directory: ./backend
