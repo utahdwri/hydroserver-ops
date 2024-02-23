@@ -69,10 +69,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: TEST CONNECTION STRING
-        run: |
-          terraform output -raw service_url
           
       - name: Run Database Setup Commands
         working-directory: ./backend
@@ -83,4 +79,4 @@ jobs:
             python manage.py collectstatic --noinput
         env:
           DJANGO_SETTINGS_MODULE: hydroserver.settings
-          DATABASE_URL: $(terraform output -json | jq -r ".service_url.value")
+          DATABASE_URL: $(terraform output -raw service_url)
