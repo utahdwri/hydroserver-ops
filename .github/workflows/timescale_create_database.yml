@@ -72,7 +72,7 @@ jobs:
 
       - name: TEST CONNECTION STRING
         run: |
-          echo $(terraform output -json) | jq -r ".service_url.value"
+          terraform output -json | jq .
           
       - name: Run Database Setup Commands
         working-directory: ./backend
