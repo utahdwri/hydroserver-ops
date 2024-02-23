@@ -50,7 +50,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init
+        run: terraform init -backend-config="key=timescale_database_${{ github.event.inputs.environment }}"
 
       - name: Terraform Plan
         id: plan

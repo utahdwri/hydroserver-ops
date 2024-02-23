@@ -7,7 +7,6 @@ terraform {
   }
   backend "s3" {
     bucket = "hydroserver-terraform-backend"
-    key    = "state"
     region = "us-east-1"
   }
   required_version = ">= 1.2.0"
@@ -37,8 +36,8 @@ resource "timescale_service" "hydroserver_timescale" {
 
 output "service_url" {
   value = format("postgresql://tsdbadmin:%s@%s:%s/tsdb",
-    timescale_service.my-resource.password,
-    timescale_service.my-resource.hostname,
-    timescale_service.my-resource.port)
+    timescale_service.hydroserver_timescale.password,
+    timescale_service.hydroserver_timescale.hostname,
+    timescale_service.hydroserver_timescale.port)
   sensitive = true
 }
