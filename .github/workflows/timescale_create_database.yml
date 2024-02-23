@@ -64,6 +64,13 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
 
+      - name: Get Terraform Outputs
+        id: get_terraform_outputs
+        run: |
+          echo "::set-output name=hostname::$(terraform output -json hostname)"
+          echo "::set-output name=port::$(terraform output -json port)"
+          echo "::set-output name=password::$(terraform output -json password)"
+
       - name: Install Django Dependencies
         working-directory: ./backend
         run: |
@@ -79,4 +86,5 @@ jobs:
             python manage.py collectstatic --noinput
         env:
           DJANGO_SETTINGS_MODULE: hydroserver.settings
-          DATABASE_URL: $(terraform output -raw service_url)
+          DATABASE_URL: "postgresql://tsdbadmin:${{ steps.get_outputs.outputs.password }}@${{ steps.get_outputs.outputs.hostname }}:${{ steps.get_outputs.outputs.port }}/tsdb"
+          
