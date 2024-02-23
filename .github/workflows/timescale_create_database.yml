@@ -73,10 +73,12 @@ jobs:
           pip install pyopenssl --upgrade
 
       - name: Set up Django Settings
+        working-directory: ./backend
         env:
           DATABASE_URL: "postgresql://tsdbadmin:${{ steps.terraform_apply.outputs.password }}@${{ steps.terraform_apply.outputs.hostname }}:${{ steps.terraform_apply.outputs.port }}/tsdb"
         run: |
-          echo "DATABASE_URL=$DATABASE_URL" > backend/.env
+          echo "DATABASE_URL=$DATABASE_URL" > .env
+          cat .env
           
       - name: Run Database Setup Commands
         working-directory: ./backend
