@@ -36,12 +36,10 @@ resource "timescale_service" "hydroserver_timescale" {
 
 output "hostname" {
   value=timescale_service.hydroserver_timescale.hostname
-  sensitive = true
 }
 
 output "port" {
   value=timescale_service.hydroserver_timescale.port
-  sensitive = true
 }
 
 output "password" {
