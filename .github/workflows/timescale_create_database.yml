@@ -76,9 +76,9 @@ jobs:
       - name: Set up Django Settings
         working-directory: ./backend
         run: |
-          echo "HOST: $(terraform output -json | jq -r ".hostname.value")"
-          echo "PASSWORD: $(terraform output -json | jq -r ".password.value")"
-          echo "PORT: $(terraform output -json | jq -r ".port.value")"
+          terraform output -json | jq -r ".hostname.value"
+          terraform output -json | jq -r ".password.value"
+          terraform output -json | jq -r ".port.value"
           
       - name: Run Database Setup Commands
         working-directory: ./backend
