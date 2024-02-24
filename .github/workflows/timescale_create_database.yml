@@ -65,7 +65,8 @@ jobs:
         id: terraform_apply
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
-          terraform output -json
+          echo "DATABASE_URL=tsdbadmin:$(terraform output -json | jq -r '.password.value')@$(terraform output -json | jq -r '.hostname.value'):$(terraform output -json | jq -r '.port.value')/tsdb" > ./backend/.env
+          cat ./backend/.env
 
       - name: Install Django Dependencies
         working-directory: ./backend
