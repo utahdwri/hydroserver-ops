@@ -6,9 +6,6 @@ on:
       environment:
         description: 'Enter a deployment environment name.'
         required: true
-      hydroserver-version: 
-        description: 'Enter a version of HydroServer to use. Leave blank to use the latest version.'
-        required: false
       superuser-email:
         description: 'Enter the email for the Django superuser.'
         required: true
@@ -18,6 +15,9 @@ on:
       partition-interval:
         description: 'Enter a partition interval in days.'
         default: '365'
+        required: true
+      hydroserver-version: 
+        description: 'Enter a version of HydroServer to use. Leave blank to use the latest version.'
         required: false
 
 jobs:
@@ -47,63 +47,63 @@ jobs:
           ref: refs/tags/${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}
           path: backend
 
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: 'us-east-1'
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
 
-      # - name: Setup Terraform
-      #   uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      # - name: Terraform Init
-      #   working-directory: ./ops/terraform/timescale
-      #   run: terraform init -backend-config="key=state/timescale_database_${{ github.event.inputs.environment }}"
+      - name: Terraform Init
+        working-directory: ./ops/terraform/timescale
+        run: terraform init -backend-config="key=state/timescale_database_${{ github.event.inputs.environment }}"
 
-      # - name: Terraform Plan
-      #   id: plan
-      #   working-directory: ./ops/terraform/timescale
-      #   run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
-      #   continue-on-error: true
+      - name: Terraform Plan
+        id: plan
+        working-directory: ./ops/terraform/timescale
+        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+        continue-on-error: true
 
-      # - name: Terraform Plan Status
-      #   if: steps.plan.outcome == 'failure'
-      #   run: exit 1
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
 
-      # - name: Terraform Apply
-      #   working-directory: ./ops/terraform/timescale
-      #   run: |
-      #     terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
-      #     echo DATABASE_URL=postgresql://tsdbadmin:$(terraform output -json | jq -r ".password.value")@$(terraform output -json | jq -r ".hostname.value"):$(terraform output -json | jq -r ".port.value")/tsdb > ../../../backend/.env
-      #     echo "HOSTNAME=$(terraform output -json | jq -r '.hostname.value')" > timescale_${{ github.event.inputs.environment }}_connection.txt
-      #     echo "PORT=$(terraform output -json | jq -r '.port.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
-      #     echo "PASSWORD=$(terraform output -json | jq -r '.password.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
-      #     echo "CONNECTION_STRING=postgresql://tsdbadmin:$(terraform output -json | jq -r '.password.value')@$(terraform output -json | jq -r '.hostname.value'):$(terraform output -json | jq -r '.port.value')/tsdb" >> timescale_${{ github.event.inputs.environment }}_connection.txt
+      - name: Terraform Apply
+        working-directory: ./ops/terraform/timescale
+        run: |
+          terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+          echo DATABASE_URL=postgresql://tsdbadmin:$(terraform output -json | jq -r ".password.value")@$(terraform output -json | jq -r ".hostname.value"):$(terraform output -json | jq -r ".port.value")/tsdb > ../../../backend/.env
+          echo "HOSTNAME=$(terraform output -json | jq -r '.hostname.value')" > timescale_${{ github.event.inputs.environment }}_connection.txt
+          echo "PORT=$(terraform output -json | jq -r '.port.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
+          echo "PASSWORD=$(terraform output -json | jq -r '.password.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
+          echo "CONNECTION_STRING=postgresql://tsdbadmin:$(terraform output -json | jq -r '.password.value')@$(terraform output -json | jq -r '.hostname.value'):$(terraform output -json | jq -r '.port.value')/tsdb" >> timescale_${{ github.event.inputs.environment }}_connection.txt
 
-      # - name: Upload Connection Details to S3
-      #   working-directory: ./ops/terraform/timescale
-      #   run: |
-      #     aws s3 cp timescale_${{ github.event.inputs.environment }}_connection.txt s3://hydroserver-terraform-backend/output/timescale_${{ inputs.instance }}_connection.txt --overwrite
+      - name: Upload Connection Details to S3
+        working-directory: ./ops/terraform/timescale
+        run: |
+          aws s3 cp timescale_${{ github.event.inputs.environment }}_connection.txt s3://hydroserver-terraform-backend/output/timescale_${{ inputs.instance }}_connection.txt --overwrite
     
-      # - name: Install Django Dependencies
-      #   working-directory: ./backend
-      #   run: |
-      #     python -m pip install --upgrade pip
-      #     pip install -r requirements.txt
-      #     pip install pyopenssl --upgrade
+      - name: Install Django Dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyopenssl --upgrade
           
-      # - name: Run Database Setup Commands
-      #   working-directory: ./backend
-      #   env:
-      #     DJANGO_SETTINGS_MODULE: hydroserver.settings
-      #     DJANGO_SUPERUSER_EMAIL: ${{ github.event.inputs.superuser-email }}
-      #     DJANGO_SUPERUSER_PASSWORD: ${{ github.event.inputs.superuser-password }}
-      #     DJANGO_SUPERUSER_FIRST_NAME: ADMIN
-      #     DJANGO_SUPERUSER_LAST_NAME: ADMIN
-      #   run: |
-      #     python manage.py migrate
-      #     python manage.py configure_timescaledb --partition-interval-days ${{ github.event.inputs.partition-interval }}
-      #     python manage.py createsuperuser --noinput
-      #     python manage.py collectstatic --noinput
+      - name: Run Database Setup Commands
+        working-directory: ./backend
+        env:
+          DJANGO_SETTINGS_MODULE: hydroserver.settings
+          DJANGO_SUPERUSER_EMAIL: ${{ github.event.inputs.superuser-email }}
+          DJANGO_SUPERUSER_PASSWORD: ${{ github.event.inputs.superuser-password }}
+          DJANGO_SUPERUSER_FIRST_NAME: ADMIN
+          DJANGO_SUPERUSER_LAST_NAME: ADMIN
+        run: |
+          python manage.py migrate
+          python manage.py configure_timescaledb --partition-interval-days ${{ github.event.inputs.partition-interval }}
+          python manage.py createsuperuser --noinput
+          python manage.py collectstatic --noinput
           
