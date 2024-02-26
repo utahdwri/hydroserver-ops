@@ -24,9 +24,6 @@ jobs:
   setup-deployment:
     runs-on: ubuntu-20.04
     environment: ${{ github.event.inputs.environment }}
-    defaults:
-      run:
-        working-directory: ./terraform/timescale
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
@@ -37,6 +34,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: main
+          path: ops
 
       - name: Checkout Backend Repo
         uses: actions/checkout@v4
@@ -49,10 +47,12 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
+        working-directory: ./ops/terraform/timescale
         run: terraform init -backend-config="key=timescale_database_${{ github.event.inputs.environment }}"
 
       - name: Terraform Plan
         id: plan
+        working-directory: ./ops/terraform/timescale
         run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
         continue-on-error: true
 
@@ -61,10 +61,16 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
+        working-directory: ./ops/terraform/timescale
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
-          echo DATABASE_URL=postgresql://tsdbadmin:$(terraform output -json | jq -r ".password.value")@$(terraform output -json | jq -r ".hostname.value"):$(terraform output -json | jq -r ".port.value")/tsdb > test.txt
-          cat test.txt
+          echo DATABASE_URL=postgresql://tsdbadmin:$(terraform output -json | jq -r ".password.value")@$(terraform output -json | jq -r ".hostname.value"):$(terraform output -json | jq -r ".port.value")/tsdb > ../../../backend/.env
+
+      - name: ENV Test
+        working-directory: ./backend
+        run: |
+          ls -al
+          cat .env
     
       # - name: Install Django Dependencies
       #   working-directory: ./backend
