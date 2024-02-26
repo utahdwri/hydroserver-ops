@@ -55,7 +55,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./ops/terraform/timescale
-        run: terraform init -backend-config="key=timescale_database_${{ github.event.inputs.environment }}"
+        run: terraform init -backend-config="key=state/timescale_database_${{ github.event.inputs.environment }}"
 
       - name: Terraform Plan
         id: plan
