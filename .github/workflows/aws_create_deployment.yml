@@ -29,7 +29,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config="key=aws_application_${{ github.event.inputs.environment }}"
+        run: terraform init -backend-config="key=state/aws_application_${{ github.event.inputs.environment }}"
 
       - name: Terraform Plan
         id: plan
