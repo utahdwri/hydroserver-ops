@@ -65,6 +65,7 @@ jobs:
         id: terraform_apply
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+          echo "DATABASE_URL=tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb"
           echo "DATABASE_URL=tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb" > ./backend/.env
           cat ./backend/.env
 
