@@ -38,7 +38,7 @@ jobs:
 
       - name: Get Latest HydroServer Version
         id: get_latest_tag
-        run: echo "::set-output name=tag::$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-back/releases/latest | jq -r '.tag_name')"
+        run: echo "tag=$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-back/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
       
       - name: Checkout Backend Repo
         uses: actions/checkout@v4
