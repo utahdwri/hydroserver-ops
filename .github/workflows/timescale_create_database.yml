@@ -72,15 +72,15 @@ jobs:
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
           echo DATABASE_URL=postgresql://tsdbadmin:$(terraform output -json | jq -r ".password.value")@$(terraform output -json | jq -r ".hostname.value"):$(terraform output -json | jq -r ".port.value")/tsdb > ../../../backend/.env
-          echo "HOSTNAME=$(terraform output -raw HOSTNAME)" > timescale_${{ github.event.inputs.environment }}_connection.txt
-          echo "PORT=$(terraform output -raw PORT)" >> timescale_${{ github.event.inputs.environment }}_connection.txt
-          echo "PASSWORD=$(terraform output -raw PASSWORD)" >> timescale_${{ github.event.inputs.environment }}_connection.txt
-          echo "CONNECTION_STRING=$(terraform output -raw CONNECTION_STRING)" >> timescale_${{ github.event.inputs.environment }}_connection.txt
+          echo "HOSTNAME=$(terraform output -json | jq -r '.hostname.value')" > timescale_${{ github.event.inputs.environment }}_connection.txt
+          echo "PORT=$(terraform output -json | jq -r '.port.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
+          echo "PASSWORD=$(terraform output -json | jq -r '.password.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
+          echo "CONNECTION_STRING=postgresql://tsdbadmin:$(terraform output -json | jq -r '.password.value')@$(terraform output -json | jq -r '.hostname.value'):$(terraform output -json | jq -r '.port.value')/tsdb" >> timescale_${{ github.event.inputs.environment }}_connection.txt
 
       - name: Upload Connection Details to S3
         working-directory: ./ops/terraform/timescale
         run: |
-          aws s3 cp timescale_${{ github.event.inputs.environment }}_connection.txt s3://hydroserver-terraform-backend/output/timescale_${{ inputs.instance }}_connection.txt
+          aws s3 cp timescale_${{ github.event.inputs.environment }}_connection.txt s3://hydroserver-terraform-backend/output/timescale_${{ inputs.instance }}_connection.txt --overwrite
     
       - name: Install Django Dependencies
         working-directory: ./backend
