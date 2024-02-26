@@ -67,8 +67,8 @@ jobs:
       - name: Build Django Environment Variables
         working-directory: ./backend
         run: |
-          echo "DATABASE_URL=tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb" > .env
-          cat .env
+          echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb"
+          echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb" > .env
 
       - name: Install Django Dependencies
         working-directory: ./backend
