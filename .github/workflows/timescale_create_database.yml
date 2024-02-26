@@ -63,11 +63,9 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
-          terraform output -raw password
-          terraform output -raw hostname | sed "s/\\\*\\\*\\\*/$(echo ${{ secrets.TIMESCALE_PROJECT_ID }})/"
-          terraform output -raw port
-          postgresql_connection="postgresql://tsdbadmin:$(terraform output -raw hostname | sed "s/\\\*\\\*\\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/")"
-          echo "PostgreSQL connection string: $postgresql_connection"
+          echo DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname):$(terraform output -raw port)/tsdb > test.txt
+          cat test.txt
+          
 
 
           
