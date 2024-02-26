@@ -77,6 +77,10 @@ jobs:
         working-directory: ./backend
         env:
           DJANGO_SETTINGS_MODULE: hydroserver.settings
+          DJANGO_SUPERUSER_EMAIL: ${{ github.event.inputs.superuser-email }}
+          DJANGO_SUPERUSER_PASSWORD: ${{ github.event.inputs.superuser-password }}
+          DJANGO_SUPERUSER_FIRST_NAME: ADMIN
+          DJANGO_SUPERUSER_LAST_NAME: ADMIN
         run: |
           python manage.py migrate
           python manage.py configure_timescaledb --partition-interval-days ${{ github.event.inputs.partition-interval }}
