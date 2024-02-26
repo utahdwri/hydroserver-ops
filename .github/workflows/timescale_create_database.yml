@@ -63,23 +63,29 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
-          ls
-          echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb"
-    
-      - name: Install Django Dependencies
-        working-directory: ./backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyopenssl --upgrade
+          terraform output -raw password
+          terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}
+          terraform output -raw port
+
+
           
-      - name: Run Database Setup Commands
-        working-directory: ./backend
-        env:
-          DJANGO_SETTINGS_MODULE: hydroserver.settings
-        run: |
-          python manage.py migrate
-          python manage.py configure_timescaledb --partition-interval-days ${{ github.event.inputs.partition-interval }}
-          python manage.py createsuperuser --noinput
-          python manage.py collectstatic --noinput
+      # ls
+      # echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb"
+    
+      # - name: Install Django Dependencies
+      #   working-directory: ./backend
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install -r requirements.txt
+      #     pip install pyopenssl --upgrade
+          
+      # - name: Run Database Setup Commands
+      #   working-directory: ./backend
+      #   env:
+      #     DJANGO_SETTINGS_MODULE: hydroserver.settings
+      #   run: |
+      #     python manage.py migrate
+      #     python manage.py configure_timescaledb --partition-interval-days ${{ github.event.inputs.partition-interval }}
+      #     python manage.py createsuperuser --noinput
+      #     python manage.py collectstatic --noinput
           
