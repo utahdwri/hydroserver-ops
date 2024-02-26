@@ -65,27 +65,21 @@ jobs:
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
           echo DATABASE_URL=postgresql://tsdbadmin:$(terraform output -json | jq -r ".password.value")@$(terraform output -json | jq -r ".hostname.value"):$(terraform output -json | jq -r ".port.value")/tsdb > ../../../backend/.env
-
-      - name: ENV Test
+    
+      - name: Install Django Dependencies
         working-directory: ./backend
         run: |
-          ls -al
-          cat .env
-    
-      # - name: Install Django Dependencies
-      #   working-directory: ./backend
-      #   run: |
-      #     python -m pip install --upgrade pip
-      #     pip install -r requirements.txt
-      #     pip install pyopenssl --upgrade
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyopenssl --upgrade
           
-      # - name: Run Database Setup Commands
-      #   working-directory: ./backend
-      #   env:
-      #     DJANGO_SETTINGS_MODULE: hydroserver.settings
-      #   run: |
-      #     python manage.py migrate
-      #     python manage.py configure_timescaledb --partition-interval-days ${{ github.event.inputs.partition-interval }}
-      #     python manage.py createsuperuser --noinput
-      #     python manage.py collectstatic --noinput
+      - name: Run Database Setup Commands
+        working-directory: ./backend
+        env:
+          DJANGO_SETTINGS_MODULE: hydroserver.settings
+        run: |
+          python manage.py migrate
+          python manage.py configure_timescaledb --partition-interval-days ${{ github.event.inputs.partition-interval }}
+          python manage.py createsuperuser --noinput
+          python manage.py collectstatic --noinput
           
