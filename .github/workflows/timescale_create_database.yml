@@ -63,12 +63,8 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
-
-      - name: Build Django Environment Variables
-        working-directory: ./backend
-        run: |
-          echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb"
-          echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb" > .env
+          ls
+          echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb" > backend/.env
 
       - name: Install Django Dependencies
         working-directory: ./backend
@@ -76,6 +72,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyopenssl --upgrade
+          cat .env
           
       - name: Run Database Setup Commands
         working-directory: ./backend
