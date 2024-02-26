@@ -37,6 +37,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: main
+          path: terraform
 
       - name: Checkout Backend Repo
         uses: actions/checkout@v4
@@ -49,11 +50,12 @@ jobs:
         uses: hashicorp/setup-terraform@v1
 
       - name: Terraform Init
-        id: init
+        working-directory: ./terraform
         run: terraform init -backend-config="key=timescale_database_${{ github.event.inputs.environment }}"
 
       - name: Terraform Plan
         id: plan
+        working-directory: ./terraform
         run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
         continue-on-error: true
 
@@ -62,12 +64,15 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        id: terraform_apply
+        working-directory: ./terraform
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
-          echo "DATABASE_URL=tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb"
-          echo "DATABASE_URL=tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb" > ./backend/.env
-          cat ./backend/.env
+
+      - name: Build Django Environment Variables
+        working-directory: ./backend
+        run: |
+          echo "DATABASE_URL=tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb" > .env
+          cat .env
 
       - name: Install Django Dependencies
         working-directory: ./backend
