@@ -66,12 +66,8 @@ jobs:
           terraform output connection_string
           terraform output -json
           terraform output -json | jq -r ".connection_string.value"
-          
-
-
-          
-      # ls
-      # echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}/"):$(terraform output -raw port)/tsdb"
+          echo "DATABASE_URL=postgresql://tsdbadmin:$(terraform output -raw password)@$(terraform output -raw hostname):$(terraform output -raw port)/tsdb" > test.txt
+          cat test.txt
     
       # - name: Install Django Dependencies
       #   working-directory: ./backend
