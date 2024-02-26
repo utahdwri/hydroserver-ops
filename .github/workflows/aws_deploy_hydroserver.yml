@@ -6,15 +6,9 @@ on:
       environment:
         description: 'Enter a deployment environment name.'
         required: true
-      version:
-        description: 'Choose a release tag to deploy, or leave blank to use the latest version.'
+      hydroserver-version: 
+        description: 'Enter a version of HydroServer to use. Leave blank to use the latest version.'
         required: false
-      enable_timescale:
-        description: 'Enable TimescaleDB. ('
-        required: true
-        default: true
-        # Setting `type` to `boolean` makes the input a boolean type
-        type: boolean
 
 jobs:
   deploy-backend:
@@ -22,11 +16,15 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     steps:
-      - name: Checkout backend repo
+      - name: Get Latest HydroServer Version
+        id: get_latest_tag
+        run: echo "tag=$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-back/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
+        
+      - name: Checkout Backend Repo
         uses: actions/checkout@v4
         with:
           repository: hydroserver2/hydroserver-webapp-back
-          ref: refs/tags/${{ github.event.inputs.version || '$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-back/releases/latest | jq -r ".tag_name")' }}
+          ref: refs/tags/${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}
           path: backend
 
       - name: Configure AWS Credentials
@@ -36,11 +34,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
 
-      - name: Create backend deployment package
+      - name: Create Backend Deployment Package
         working-directory: ./backend
         run: zip -r deploy_package.zip ./
 
-      - name: Upload deployment package to S3
+      - name: Upload Deployment Package to S3
         working-directory: ./backend
         run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-backend/deploy_package_${{ github.event.inputs.version }}.zip
 
@@ -155,11 +153,15 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
     steps:
-      - name: Checkout frontend repo
+      - name: Get Latest HydroServer Version
+        id: get_latest_tag
+        run: echo "tag=$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-front/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
+    
+      - name: Checkout Frontend Repo
         uses: actions/checkout@v4
         with:
           repository: hydroserver2/hydroserver-webapp-front
-          ref: refs/tags/${{ github.event.inputs.version || '$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-front/releases/latest | jq -r ".tag_name")' }}
+          ref: refs/tags/${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}
           path: frontend
 
       - name: Configure AWS Credentials
@@ -176,7 +178,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install Dependencies
         working-directory: ./frontend
         run: npm ci
 
@@ -190,7 +192,7 @@ jobs:
           VITE_APP_PROXY_BASE_URL=${{ secrets.PROXY_BASE_URL }}
           EOF
 
-      - name: Build frontend
+      - name: Build Frontend
         working-directory: ./frontend
         run: npm run build
 
@@ -199,6 +201,6 @@ jobs:
         run: |
           aws s3 sync ./dist s3://hydroserver-${{ github.event.inputs.environment }}-web/ --delete
 
-      - name: Invalidate CloudFront distribution cache
+      - name: Invalidate CloudFront Distribution Cache
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
