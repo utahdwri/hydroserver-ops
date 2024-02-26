@@ -64,7 +64,7 @@ jobs:
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
           terraform output -raw password
-          terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}
+          terraform output -raw hostname | sed "s/\\*\\*\\*/${{ secrets.TIMESCALE_PROJECT_ID }}"
           terraform output -raw port
 
 
