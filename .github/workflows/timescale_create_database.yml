@@ -63,6 +63,8 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+          terraform output connection_string
+          terraform output -json
           terraform output -json | jq -r ".connection_string.value"
           
 
