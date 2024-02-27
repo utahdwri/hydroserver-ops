@@ -40,7 +40,7 @@ jobs:
 
       - name: Upload Deployment Package to S3
         working-directory: ./backend
-        run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-backend/deploy_package_${{ github.event.inputs.version }}.zip
+        run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-backend/deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip
 
       - name: Configure Environment Variables
         working-directory: ./backend
@@ -135,9 +135,9 @@ jobs:
         run: |
           aws elasticbeanstalk create-application-version \
           --application-name hydroserver-${{ github.event.inputs.environment }} \
-          --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-backend",S3Key="deploy_package_${{ github.event.inputs.version }}.zip" \
-          --version-label "${{ github.event.inputs.version }}" \
-          --description "HydroServer Version ${{ github.event.inputs.version }}" \
+          --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-backend",S3Key="deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip" \
+          --version-label "${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
+          --description "HydroServer Version ${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
           --auto-create-application
 
       - name: Update ElasticBeanstalk Environment
@@ -145,7 +145,7 @@ jobs:
         run: |
           aws elasticbeanstalk update-environment \
           --environment-name hydroserver-${{ github.event.inputs.environment }}-env \
-          --version-label "${{ github.event.inputs.version }}" \
+          --version-label "${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
           --option-settings file://environment.json
 
   deploy-frontend:
@@ -186,7 +186,7 @@ jobs:
         working-directory: ./frontend
         run: |
           cat << EOF > .env
-          VITE_APP_VERSION=${{ github.event.inputs.version || '$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-front/releases/latest | jq -r ".tag_name")' }}
+          VITE_APP_VERSION=${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}
           VITE_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
           VITE_APP_GOOGLE_MAPS_MAP_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
           VITE_APP_PROXY_BASE_URL=${{ secrets.PROXY_BASE_URL }}
