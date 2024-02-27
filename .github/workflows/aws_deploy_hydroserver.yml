@@ -159,7 +159,7 @@ jobs:
         working-directory: ./backend
         run: |
           cat << EOF > .env
-          PROXY_BASE_URL=127.0.0.1:8000
+          PROXY_BASE_URL=http://127.0.0.1:8000
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           DEPLOYED=True
           EOF
