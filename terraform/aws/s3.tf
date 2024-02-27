@@ -144,7 +144,7 @@ resource "aws_s3_bucket_policy" "hydroserver_storage_bucket" {
 
 resource "aws_s3_bucket_object" "media_folder" {
   bucket = aws_s3_bucket.hydroserver_storage_bucket.id
-  key    = "media/"
+  key    = "photos/"
 }
 
 resource "aws_s3_bucket_object" "static_folder" {
