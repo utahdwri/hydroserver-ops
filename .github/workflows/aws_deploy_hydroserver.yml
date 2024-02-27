@@ -148,6 +148,30 @@ jobs:
           --version-label "${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
           --option-settings file://environment.json
 
+      - name: Install Django Dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyopenssl --upgrade
+
+      - name: Configure Environment Variables
+        working-directory: ./backend
+        run: |
+          cat << EOF > .env
+          PROXY_BASE_URL=127.0.0.1:8000
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          DEPLOYED=True
+          EOF
+
+      - name: Run Django Update Commands
+        working-directory: ./backend
+        env:
+          DJANGO_SETTINGS_MODULE: hydroserver.settings
+        run: |
+          python manage.py migrate
+          python manage.py collectstatic --noinput 
+
   deploy-frontend:
     name: Build and Deploy Frontend
     runs-on: ubuntu-latest
