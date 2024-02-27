@@ -162,6 +162,9 @@ jobs:
           PROXY_BASE_URL=http://127.0.0.1:8000
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           DEPLOYED=True
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_STORAGE_BUCKET_NAME=hydroserver-${{ github.event.inputs.environment }}-storage
           EOF
 
       - name: Run Django Update Commands
