@@ -80,7 +80,7 @@ jobs:
           echo "PASSWORD=$(terraform output -json | jq -r '.password.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
           echo "CONNECTION_STRING=postgresql://tsdbadmin:$(terraform output -json | jq -r '.password.value')@$(terraform output -json | jq -r '.hostname.value'):$(terraform output -json | jq -r '.port.value')/tsdb" >> timescale_${{ github.event.inputs.environment }}_connection.txt
           cat << EOF > ../../../backend/.env
-          PROXY_BASE_URL=127.0.0.1:8000
+          PROXY_BASE_URL=http://127.0.0.1:8000
           DATABASE_URL=postgresql://tsdbadmin:$(terraform output -json | jq -r ".password.value")@$(terraform output -json | jq -r ".hostname.value"):$(terraform output -json | jq -r ".port.value")/tsdb
           DEPLOYED=True
           EOF
