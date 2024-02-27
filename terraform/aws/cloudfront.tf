@@ -10,12 +10,6 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
   }
 
   origin {
-    domain_name = aws_s3_bucket.hydroserver_static_bucket.bucket_regional_domain_name
-    origin_access_control_id = aws_cloudfront_origin_access_control.hydroserver_oac.id
-    origin_id   = "hydroserver-static"
-  }
-
-  origin {
     domain_name = aws_s3_bucket.hydroserver_storage_bucket.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.hydroserver_oac.id
     origin_id   = "hydroserver-storage"
@@ -98,10 +92,41 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
     }
   }
 
+  ordered_cache_behavior {
+    path_pattern     = "/media/*"
+    target_origin_id = "hydroserver-storage"
+    viewer_protocol_policy = "redirect-to-https"
+
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD", "OPTIONS"]
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern     = "/static/*"
+    target_origin_id = "hydroserver-storage"
+    viewer_protocol_policy = "redirect-to-https"
+
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD", "OPTIONS"]
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
   restrictions {
     geo_restriction {
-      restriction_type = "whitelist"
-      locations        = ["US", "CA"]
+      restriction_type = "none"
     }
   }
 
