@@ -84,7 +84,7 @@ jobs:
       - name: Upload Connection Details to S3
         working-directory: ./ops/terraform/timescale
         run: |
-          aws s3 cp timescale_${{ github.event.inputs.environment }}_connection.txt s3://hydroserver-terraform-backend/output/timescale_${{ inputs.instance }}_connection.txt
+          aws s3 cp timescale_${{ github.event.inputs.environment }}_connection.txt s3://hydroserver-terraform-backend/output/timescale_${{ github.event.inputs.environment }}_connection.txt
     
       - name: Install Django Dependencies
         working-directory: ./backend
