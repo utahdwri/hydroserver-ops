@@ -40,7 +40,7 @@ jobs:
 
       - name: Upload Deployment Package to S3
         working-directory: ./backend
-        run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-backend/deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip
+        run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-django/deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip
 
       - name: Configure Environment Variables
         working-directory: ./backend
@@ -135,7 +135,7 @@ jobs:
         run: |
           aws elasticbeanstalk create-application-version \
           --application-name hydroserver-${{ github.event.inputs.environment }} \
-          --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-backend",S3Key="deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip" \
+          --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-django",S3Key="deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip" \
           --version-label "${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
           --description "HydroServer Version ${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
           --auto-create-application
