@@ -35,6 +35,12 @@ resource "aws_elastic_beanstalk_environment" "hydroserver_django_env" {
   }
 
   setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name      = "IamInstanceProfileS3"
+    value     = aws_iam_role.elasticbeanstalk_role.name
+  }
+
+  setting {
     namespace = "aws:elasticbeanstalk:application:environment"
     name      = "ADMIN_EMAIL"
     value     = ""
