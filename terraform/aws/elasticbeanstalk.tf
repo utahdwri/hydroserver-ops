@@ -37,7 +37,7 @@ resource "aws_elastic_beanstalk_environment" "hydroserver_django_env" {
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "IamInstanceProfile"
-    value     = "arn:aws:iam::${var.aws_account_id}:role/HydroServerStorageManager"
+    value     = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/HydroServerStorageManager"
   }
 
   setting {
