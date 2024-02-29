@@ -35,12 +35,6 @@ resource "aws_elastic_beanstalk_environment" "hydroserver_django_env" {
   }
 
   setting {
-    namespace = "aws:autoscaling:launchconfiguration"
-    name      = "IamInstanceProfile"
-    value     = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/HydroServerStorageManager"
-  }
-
-  setting {
     namespace = "aws:elasticbeanstalk:application:environment"
     name      = "ADMIN_EMAIL"
     value     = ""
