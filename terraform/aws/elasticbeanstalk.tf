@@ -36,8 +36,8 @@ resource "aws_elastic_beanstalk_environment" "hydroserver_django_env" {
 
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
-    name      = "IamInstanceProfileS3"
-    value     = aws_iam_role.elasticbeanstalk_role.name
+    name      = "IamInstanceProfile"
+    value     = "arn:aws:iam::${var.aws_account_id}:role/HydroServerStorageManager"
   }
 
   setting {
@@ -123,49 +123,4 @@ resource "aws_elastic_beanstalk_environment" "hydroserver_django_env" {
     name      = "SECRET_KEY"
     value     = ""
   }
-}
-
-# ------------------------------------------------ #
-# HydroServer Elastic Beanstalk IAM Role           #
-# ------------------------------------------------ #
-
-resource "aws_iam_role" "elasticbeanstalk_role" {
-  name = "hydroserver-${var.instance}-eb-iam-role"
-  
-  assume_role_policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "elasticbeanstalk.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_policy" "eb_s3_policy" {
-  name        = "hydroserver-${var.instance}-eb-s3-access-policy"
-  description = "Policy for S3 storage bucket access"
-  
-  policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:ListBucket"
-      ],
-      "Resource": [
-        "arn:aws:s3:::hydroserver-${var.instance}-storage",
-        "arn:aws:s3:::hydroserver-${var.instance}-storage/*"
-      ]
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "s3_policy_attachment" {
-  policy_arn = aws_iam_policy.eb_s3_policy.arn
-  role       = aws_iam_role.elasticbeanstalk_role.name
 }
