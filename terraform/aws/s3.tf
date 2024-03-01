@@ -3,15 +3,15 @@
 # ------------------------------------------------ #
 
 resource "aws_s3_bucket" "hydroserver_web_bucket" {
-  bucket = "hydroserver-${var.instance}-web"
+  bucket = "hydroserver-web-${var.instance}"
 }
 
 resource "aws_s3_bucket" "hydroserver_storage_bucket" {
-  bucket = "hydroserver-${var.instance}-storage"
+  bucket = "hydroserver-storage-${var.instance}"
 }
 
 resource "aws_s3_bucket" "hydroserver_django_bucket" {
-  bucket = "hydroserver-${var.instance}-django"
+  bucket = "hydroserver-django-${var.instance}"
 }
 
 # ------------------------------------------------ #
@@ -142,12 +142,12 @@ resource "aws_s3_bucket_policy" "hydroserver_storage_bucket" {
 # HydroServer S3 Storage Folders                   #
 # ------------------------------------------------ #
 
-resource "aws_s3_bucket_object" "media_folder" {
+resource "aws_s3_object" "media_folder" {
   bucket = aws_s3_bucket.hydroserver_storage_bucket.id
   key    = "photos/"
 }
 
-resource "aws_s3_bucket_object" "static_folder" {
+resource "aws_s3_object" "static_folder" {
   bucket = aws_s3_bucket.hydroserver_storage_bucket.id
   key    = "static/"
 }

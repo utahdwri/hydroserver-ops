@@ -171,7 +171,7 @@ resource "aws_cloudfront_function" "hydroserver_x_forward_host" {
 resource "aws_cloudfront_origin_access_identity" "hydroserver_oai" {}
 
 resource "aws_cloudfront_origin_access_control" "hydroserver_oac" {
-  name                              = "hydroserver-${var.instance}-oac"
+  name                              = "hydroserver-oac-${var.instance}"
   description                       = ""
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
