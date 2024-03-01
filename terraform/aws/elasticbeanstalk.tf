@@ -118,3 +118,19 @@ resource "aws_elastic_beanstalk_environment" "hydroserver_django_env" {
     value     = ""
   }
 }
+
+# ------------------------------------------------ #
+# HydroServer Elastic Beanstalk Role Policies      #
+# ------------------------------------------------ #
+
+resource "aws_iam_role_policy_attachment" "s3_policy_attachment" {
+  role       = "aws-elasticbeanstalk-ec2-role-hydroserver-${var.instance}"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "ses_policy_attachment" {
+  role       = "aws-elasticbeanstalk-ec2-role-hydroserver-${var.instance}"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSESFullAccess"
+}
+
+
