@@ -57,10 +57,6 @@
                 }
             }
         },
-
-
-
-
         {
             "Sid": "DenyPermissionBoundaryIAMPolicyAlteration",
             "Effect": "Deny",

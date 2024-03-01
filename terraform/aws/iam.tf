@@ -17,6 +17,11 @@ resource "aws_iam_role" "elasticbeanstalk_role" {
   permissions_boundary = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/HydroServerIAMPermissionBoundary"
 }
 
+resource "aws_iam_instance_profile" "elasticbeanstalk_instance_profile" {
+  name = "hydroserver-ec2-instance-profile-${var.instance}"
+  roles = [aws_iam_role.elasticbeanstalk_role.name]
+}
+
 # ------------------------------------------------ #
 # HydroServer EC2 IAM Role Attach Policies         #
 # ------------------------------------------------ #
