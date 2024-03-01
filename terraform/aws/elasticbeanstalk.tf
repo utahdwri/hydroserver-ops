@@ -31,7 +31,7 @@ resource "aws_elastic_beanstalk_environment" "hydroserver_django_env" {
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "IamInstanceProfile"
-    value     = "aws-elasticbeanstalk-ec2-role"
+    value     = "aws-elasticbeanstalk-ec2-role-hydroserver-${var.instance}"
   }
 
   setting {
