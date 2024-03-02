@@ -80,63 +80,63 @@ resource "aws_s3_object" "hydroserver_index_html" {
 # HydroServer S3 Bucket Policies                   #
 # ------------------------------------------------ #
 
-#resource "aws_s3_bucket_policy" "hydroserver_web_bucket" {
-#  bucket = aws_s3_bucket.hydroserver_web_bucket.id
-#  policy = jsonencode({
-#    Version = "2008-10-17"
-#    Id      = "PolicyForCloudFrontPrivateContent"
-#    Statement = [
-#      {
-#        Sid    = "AllowCloudFrontServicePrincipal"
-#        Effect = "Allow"
-#        Principal = {
-#          Service = "cloudfront.amazonaws.com"
-#        }
-#        Action   = "s3:GetObject"
-#        Resource = "${aws_s3_bucket.hydroserver_web_bucket.arn}/*"
-#        Condition = {
-#          StringEquals = {
-#            "AWS:SourceArn" = aws_cloudfront_distribution.hydroserver_distribution.arn
-#          }
-#        }
-#      }
-#    ]
-#  })
-#
-#  depends_on = [
-#    aws_cloudfront_distribution.hydroserver_distribution,
-#    aws_s3_bucket_public_access_block.hydroserver_web_bucket
-#  ]
-#}
-#
-#resource "aws_s3_bucket_policy" "hydroserver_storage_bucket" {
-#  bucket = aws_s3_bucket.hydroserver_storage_bucket.id
-#  policy = jsonencode({
-#    Version = "2008-10-17"
-#    Id      = "PolicyForCloudFrontPrivateContent"
-#    Statement = [
-#      {
-#        Sid    = "AllowCloudFrontServicePrincipal"
-#        Effect = "Allow"
-#        Principal = {
-#          Service = "cloudfront.amazonaws.com"
-#        }
-#        Action   = "s3:GetObject"
-#        Resource = "${aws_s3_bucket.hydroserver_storage_bucket.arn}/*"
-#        Condition = {
-#          StringEquals = {
-#            "AWS:SourceArn" = aws_cloudfront_distribution.hydroserver_distribution.arn
-#          }
-#        }
-#      }
-#    ]
-#  })
-#
-#  depends_on = [
-#    aws_cloudfront_distribution.hydroserver_distribution,
-#    aws_s3_bucket_public_access_block.hydroserver_storage_bucket
-#  ]
-#}
+resource "aws_s3_bucket_policy" "hydroserver_web_bucket" {
+  bucket = aws_s3_bucket.hydroserver_web_bucket.id
+  policy = jsonencode({
+    Version = "2008-10-17"
+    Id      = "PolicyForCloudFrontPrivateContent"
+    Statement = [
+      {
+        Sid    = "AllowCloudFrontServicePrincipal"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.hydroserver_web_bucket.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.hydroserver_distribution.arn
+          }
+        }
+      }
+    ]
+  })
+
+  depends_on = [
+    aws_cloudfront_distribution.hydroserver_distribution,
+    aws_s3_bucket_public_access_block.hydroserver_web_bucket
+  ]
+}
+
+resource "aws_s3_bucket_policy" "hydroserver_storage_bucket" {
+  bucket = aws_s3_bucket.hydroserver_storage_bucket.id
+  policy = jsonencode({
+    Version = "2008-10-17"
+    Id      = "PolicyForCloudFrontPrivateContent"
+    Statement = [
+      {
+        Sid    = "AllowCloudFrontServicePrincipal"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.hydroserver_storage_bucket.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.hydroserver_distribution.arn
+          }
+        }
+      }
+    ]
+  })
+
+  depends_on = [
+    aws_cloudfront_distribution.hydroserver_distribution,
+    aws_s3_bucket_public_access_block.hydroserver_storage_bucket
+  ]
+}
 
 # ------------------------------------------------ #
 # HydroServer S3 Storage Folders                   #
