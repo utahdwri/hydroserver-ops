@@ -18,7 +18,7 @@ resource "aws_iam_role" "elasticbeanstalk_role" {
 }
 
 resource "aws_iam_instance_profile" "elasticbeanstalk_instance_profile" {
-  name = "hydroserver-ec2-instance-profile-${var.instance}"
+  name = "hydroserver-ec2-role-${var.instance}"
   role = aws_iam_role.elasticbeanstalk_role.name
 }
 
