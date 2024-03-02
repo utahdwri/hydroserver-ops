@@ -9,7 +9,7 @@ resource "aws_iam_role" "elasticbeanstalk_role" {
     "Statement": [{
       "Effect": "Allow",
       "Principal": {
-        "Service": "elasticbeanstalk.amazonaws.com"
+        "Service": "ec2.amazonaws.com"
       },
       "Action": "sts:AssumeRole"
     }]

@@ -5,8 +5,11 @@
             "Sid": "AllowCreationOfHydroServerEC2Roles",
             "Effect": "Allow",
             "Action": [
+                "iam:GetInstanceProfile",
                 "iam:AddRoleToInstanceProfile",
+                "iam:RemoveRoleFromInstanceProfile",
                 "iam:CreateInstanceProfile",
+                "iam:DeleteInstanceProfile",
                 "iam:CreateRole",
                 "iam:PutRolePermissionsBoundary"
             ],
