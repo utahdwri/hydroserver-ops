@@ -67,7 +67,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         working-directory: ./ops/terraform/timescale
-        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ vars.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
         continue-on-error: true
 
       - name: Terraform Plan Status
@@ -77,7 +77,7 @@ jobs:
       - name: Terraform Apply
         working-directory: ./ops/terraform/timescale
         run: |
-          terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ secrets.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+          terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var project_id="${{ vars.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
           echo "HOSTNAME=$(terraform output -json | jq -r '.hostname.value')" > timescale_${{ github.event.inputs.environment }}_connection.txt
           echo "PORT=$(terraform output -json | jq -r '.port.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
           echo "PASSWORD=$(terraform output -json | jq -r '.password.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
