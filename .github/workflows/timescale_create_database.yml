@@ -29,8 +29,8 @@ jobs:
     runs-on: ubuntu-20.04
     environment: ${{ github.event.inputs.environment }}
     env:
-      AWS_DEFAULT_REGION: "us-east-1"
-      AWS_STORAGE_BUCKET_NAME: hydroserver-${{ github.event.inputs.environment }}-storage
+      AWS_DEFAULT_REGION: ${{ vars.AWS_REGION }}
+      AWS_STORAGE_BUCKET_NAME: hydroserver-${{ github.event.inputs.environment }}-storage-${{ vars.AWS_ACCOUNT_ID }}
       
     steps:
       - name: configureawscredentials
@@ -91,7 +91,7 @@ jobs:
       - name: Upload Connection Details to S3
         working-directory: ./ops/terraform/timescale
         run: |
-          aws s3 cp timescale_${{ github.event.inputs.environment }}_connection.txt s3://hydroserver-terraform-backend/output/timescale_${{ github.event.inputs.environment }}_connection.txt
+          aws s3 cp timescale_${{ github.event.inputs.environment }}_connection.txt s3://${{ vars.TERRAFORM_BUCKET }}/output/timescale_${{ github.event.inputs.environment }}_connection.txt
     
       - name: Install Django Dependencies
         working-directory: ./backend
