@@ -165,7 +165,6 @@ jobs:
           DJANGO_SETTINGS_MODULE: hydroserver.settings
         run: |
           python manage.py migrate
-          python manage.py collectstatic --noinput 
 
   deploy-frontend:
     name: Build and Deploy Frontend
