@@ -6,7 +6,7 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = var.backend_bucket_name
+    bucket = var.bucket
     region = var.region
   }
   required_version = ">= 1.2.0"
@@ -17,7 +17,7 @@ provider "aws" {
 }
 
 variable "instance" {}
-variable "backend_bucket_name" {}
+variable "bucket" {}
 variable "region" {}
 
 data "aws_caller_identity" "current" {}
