@@ -13,6 +13,7 @@ terraform {
 }
 
 variable "instance" {}
+variable "region" {}
 variable "project_id" {}
 variable "access_key" {}
 variable "secret_key" {}
