@@ -16,3 +16,12 @@ provider "aws" {
 variable "instance" {}
 
 data "aws_caller_identity" "current" {}
+
+data "terraform_remote_state" "state" {
+  backend = "s3"
+  config {
+    bucket = "${var.bucket}"
+    region = "${var.region}"
+    key    = "${var.key}"
+  }
+}
