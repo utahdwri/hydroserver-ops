@@ -18,15 +18,13 @@ jobs:
     defaults:
       run:
         working-directory: ./terraform/aws
-    env:
-      AWS_DEFAULT_REGION: "us-east-1"
     steps:
       - name: configureawscredentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_IAM_ROLE }}
           role-session-name: create-hydroserver-resources
-          aws-region: ${{env.AWS_DEFAULT_REGION}}
+          aws-region: ${{ vars.AWS_REGION }}
     
       - name: Checkout Repo
         uses: actions/checkout@v3
@@ -42,7 +40,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}"
+        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var region="${{ vars.AWS_REGION }}" -var bucket="${{ vars.TERRAFORM_BUCKET }}"
         continue-on-error: true
 
       - name: Terraform Plan Status
@@ -50,4 +48,4 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}"
+        run: terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var region="${{ vars.AWS_REGION }}" -var bucket="${{ vars.TERRAFORM_BUCKET }}"
