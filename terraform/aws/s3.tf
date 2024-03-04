@@ -3,15 +3,15 @@
 # ------------------------------------------------ #
 
 resource "aws_s3_bucket" "hydroserver_web_bucket" {
-  bucket = "hydroserver-web-${var.instance}"
+  bucket = "hydroserver-web-${var.instance}-${data.aws_caller_identity.current.account_id}"
 }
 
 resource "aws_s3_bucket" "hydroserver_storage_bucket" {
-  bucket = "hydroserver-storage-${var.instance}"
+  bucket = "hydroserver-storage-${var.instance}-${data.aws_caller_identity.current.account_id}"
 }
 
 resource "aws_s3_bucket" "hydroserver_django_bucket" {
-  bucket = "hydroserver-django-${var.instance}"
+  bucket = "hydroserver-django-${var.instance}-${data.aws_caller_identity.current.account_id}"
 }
 
 # ------------------------------------------------ #
