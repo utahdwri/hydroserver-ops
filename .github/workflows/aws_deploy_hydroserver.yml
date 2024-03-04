@@ -129,7 +129,7 @@ jobs:
         run: |
           aws elasticbeanstalk create-application-version \
           --application-name hydroserver-${{ github.event.inputs.environment }} \
-          --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-django-${{ vars.AWS_ACCOUNT_ID }}",S3Key="deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip" \
+          --source-bundle S3Bucket="hydroserver-django-${{ github.event.inputs.environment }}-${{ vars.AWS_ACCOUNT_ID }}",S3Key="deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip" \
           --version-label "${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
           --description "HydroServer Version ${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
           --auto-create-application
