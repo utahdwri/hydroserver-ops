@@ -6,16 +6,18 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = "hydroserver-terraform-backend"
-    region = "us-east-1"
+    bucket = var.backend_bucket_name
+    region = var.region
   }
   required_version = ">= 1.2.0"
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.region
 }
 
 variable "instance" {}
+variable "backend_bucket_name" {}
+variable "region" {}
 
 data "aws_caller_identity" "current" {}
