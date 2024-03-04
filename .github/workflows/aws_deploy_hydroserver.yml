@@ -44,7 +44,7 @@ jobs:
 
       - name: Upload Deployment Package to S3
         working-directory: ./backend
-        run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-django-${{ vars.AWS_ACCOUNT_ID }}/deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip
+        run: aws s3 cp deploy_package.zip s3://hydroserver-django-${{ github.event.inputs.environment }}-${{ vars.AWS_ACCOUNT_ID }}/deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip
 
       - name: Configure Environment Variables
         working-directory: ./backend
@@ -64,7 +64,7 @@ jobs:
             {
               "Namespace": "aws:elasticbeanstalk:application:environment",
               "OptionName": "AWS_STORAGE_BUCKET_NAME",
-              "Value": "hydroserver-${{ github.event.inputs.environment }}-storage-${{ vars.AWS_ACCOUNT_ID }}"
+              "Value": "hydroserver-storage-${{ github.event.inputs.environment }}-${{ vars.AWS_ACCOUNT_ID }}"
             },
             {
               "Namespace": "aws:elasticbeanstalk:application:environment",
@@ -156,7 +156,7 @@ jobs:
           PROXY_BASE_URL=http://127.0.0.1:8000
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           DEPLOYED=True
-          AWS_STORAGE_BUCKET_NAME=hydroserver-${{ github.event.inputs.environment }}-storage-${{ vars.AWS_ACCOUNT_ID }}
+          AWS_STORAGE_BUCKET_NAME=hydroserver-storage-${{ github.event.inputs.environment }}-${{ vars.AWS_ACCOUNT_ID }}
           EOF
 
       - name: Run Django Update Commands
@@ -218,7 +218,7 @@ jobs:
       - name: Deploy to S3
         working-directory: ./frontend
         run: |
-          aws s3 sync ./dist s3://hydroserver-${{ github.event.inputs.environment }}-web-${{ vars.AWS_ACCOUNT_ID }}/ --delete
+          aws s3 sync ./dist s3://hydroserver-web-${{ github.event.inputs.environment }}-${{ vars.AWS_ACCOUNT_ID }}/ --delete
 
       - name: Invalidate CloudFront Distribution Cache
         run: |
