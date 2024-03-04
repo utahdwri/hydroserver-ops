@@ -38,9 +38,17 @@ jobs:
         id: init
         run: terraform init -backend-config="key=state/aws_application_${{ github.event.inputs.environment }}"
 
+      - name: Terraform Backend
+        id: backend
+        run: |
+          cat << EOF > backend.conf
+          bucket = ${{ vars.TERRAFORM_BUCKET }}
+          region = ${{ vars.AWS_REGION }}
+          EOF
+  
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var region="${{ vars.AWS_REGION }}" -var bucket="${{ vars.TERRAFORM_BUCKET }}"
+        run: terraform plan -no-color -backend-config=backend.conf -var instance="${{ github.event.inputs.environment }}"
         continue-on-error: true
 
       - name: Terraform Plan Status
@@ -48,4 +56,4 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var region="${{ vars.AWS_REGION }}" -var bucket="${{ vars.TERRAFORM_BUCKET }}"
+        run: terraform apply -auto-approve -backend-config=backend.conf -var instance="${{ github.event.inputs.environment }}"
