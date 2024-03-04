@@ -38,9 +38,9 @@ jobs:
         id: backend
         run: |
           cat << EOF > backend.conf
-          bucket = ${{ vars.TERRAFORM_BUCKET }}
-          key=state/aws_application_${{ github.event.inputs.environment }}
-          region = ${{ vars.AWS_REGION }}
+          bucket = "${{ vars.TERRAFORM_BUCKET }}"
+          key    = "state/aws_application_${{ github.event.inputs.environment }}"
+          region = "${{ vars.AWS_REGION }}"
           EOF
 
       - name: Terraform Init
