@@ -93,7 +93,7 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
   }
 
   ordered_cache_behavior {
-    path_pattern     = "/media/*"
+    path_pattern     = "/photos/*"
     target_origin_id = "hydroserver-storage"
     viewer_protocol_policy = "redirect-to-https"
 
