@@ -10,6 +10,10 @@ on:
         description: 'Enter a version of HydroServer to use. Leave blank to use the latest version.'
         required: false
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy-backend:
     name: Deploy Backend
