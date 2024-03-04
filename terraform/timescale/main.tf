@@ -6,13 +6,14 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = var.backend_bucket_name
+    bucket = var.bucket
     region = var.region
   }
   required_version = ">= 1.2.0"
 }
 
 variable "instance" {}
+variable "bucket" {}
 variable "region" {}
 variable "project_id" {}
 variable "access_key" {}
