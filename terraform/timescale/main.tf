@@ -6,8 +6,8 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = "hydroserver-terraform-backend"
-    region = "us-east-1"
+    bucket = var.backend_bucket_name
+    region = var.region
   }
   required_version = ">= 1.2.0"
 }
@@ -27,7 +27,7 @@ resource "timescale_service" "hydroserver_timescale" {
   name        = "hydroserver-${var.instance}"
   milli_cpu   = 500
   memory_gb   = 2
-  region_code = "us-east-1"
+  region_code = var.region
 
   lifecycle {
     prevent_destroy = true
