@@ -32,7 +32,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Create Backend Deployment Package
         working-directory: ./backend
@@ -40,7 +40,7 @@ jobs:
 
       - name: Upload Deployment Package to S3
         working-directory: ./backend
-        run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-django/deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip
+        run: aws s3 cp deploy_package.zip s3://hydroserver-${{ github.event.inputs.environment }}-django-${{ vars.AWS_ACCOUNT_ID }}/deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip
 
       - name: Configure Environment Variables
         working-directory: ./backend
@@ -70,7 +70,7 @@ jobs:
             {
               "Namespace": "aws:elasticbeanstalk:application:environment",
               "OptionName": "AWS_STORAGE_BUCKET_NAME",
-              "Value": "hydroserver-${{ github.event.inputs.environment }}-storage"
+              "Value": "hydroserver-${{ github.event.inputs.environment }}-storage-${{ vars.AWS_REGION }}"
             },
             {
               "Namespace": "aws:elasticbeanstalk:application:environment",
@@ -135,7 +135,7 @@ jobs:
         run: |
           aws elasticbeanstalk create-application-version \
           --application-name hydroserver-${{ github.event.inputs.environment }} \
-          --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-django",S3Key="deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip" \
+          --source-bundle S3Bucket="hydroserver-${{ github.event.inputs.environment }}-django-${{ vars.AWS_ACCOUNT_ID }}",S3Key="deploy_package_${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}.zip" \
           --version-label "${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
           --description "HydroServer Version ${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
           --auto-create-application
@@ -164,7 +164,7 @@ jobs:
           DEPLOYED=True
           AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_STORAGE_BUCKET_NAME=hydroserver-${{ github.event.inputs.environment }}-storage
+          AWS_STORAGE_BUCKET_NAME=hydroserver-${{ github.event.inputs.environment }}-storage-${{ vars.AWS_ACCOUNT_ID }}
           EOF
 
       - name: Run Django Update Commands
@@ -196,7 +196,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Setup Node 18.x
         uses: actions/setup-node@v3
@@ -226,7 +226,7 @@ jobs:
       - name: Deploy to S3
         working-directory: ./frontend
         run: |
-          aws s3 sync ./dist s3://hydroserver-${{ github.event.inputs.environment }}-web/ --delete
+          aws s3 sync ./dist s3://hydroserver-${{ github.event.inputs.environment }}-web-${{ vars.AWS_ACCOUNT_ID }}/ --delete
 
       - name: Invalidate CloudFront Distribution Cache
         run: |
