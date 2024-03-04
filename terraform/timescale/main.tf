@@ -5,15 +5,11 @@ terraform {
       version = "~> 1.1.0"
     }
   }
-  backend "s3" {
-    bucket = var.bucket
-    region = var.region
-  }
+  backend "s3" {}
   required_version = ">= 1.2.0"
 }
 
 variable "instance" {}
-variable "bucket" {}
 variable "region" {}
 variable "project_id" {}
 variable "access_key" {}
