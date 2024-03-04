@@ -58,12 +58,12 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./ops/terraform/timescale
-        run: terraform init -backend-config="key=state/timescale_database_${{ github.event.inputs.environment }}"
+        run: terraform init -backend-config="bucket=${{ vars.TERRAFORM_BUCKET }}" -backend-config="region=${{ vars.AWS_REGION }}" -backend-config="key=state/timescale_database_${{ github.event.inputs.environment }}"
 
       - name: Terraform Plan
         id: plan
         working-directory: ./ops/terraform/timescale
-        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var region="${{ vars.AWS_REGION }}" -var bucket="${{ vars.TERRAFORM_BUCKET }}" -var project_id="${{ vars.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+        run: terraform plan -no-color -var instance="${{ github.event.inputs.environment }}" -var region="${{ vars.AWS_REGION }}" -var project_id="${{ vars.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
         continue-on-error: true
 
       - name: Terraform Plan Status
@@ -73,7 +73,7 @@ jobs:
       - name: Terraform Apply
         working-directory: ./ops/terraform/timescale
         run: |
-          terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var region="${{ vars.AWS_REGION }}" -var bucket="${{ vars.TERRAFORM_BUCKET }}" -var project_id="${{ vars.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
+          terraform apply -auto-approve -var instance="${{ github.event.inputs.environment }}" -var region="${{ vars.AWS_REGION }}" -var project_id="${{ vars.TIMESCALE_PROJECT_ID }}" -var access_key="${{ secrets.TIMESCALE_ACCESS_KEY }}" -var secret_key="${{ secrets.TIMESCALE_SECRET_KEY }}"
           echo "HOSTNAME=$(terraform output -json | jq -r '.hostname.value')" > timescale_${{ github.event.inputs.environment }}_connection.txt
           echo "PORT=$(terraform output -json | jq -r '.port.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
           echo "PASSWORD=$(terraform output -json | jq -r '.password.value')" >> timescale_${{ github.event.inputs.environment }}_connection.txt
