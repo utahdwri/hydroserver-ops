@@ -153,7 +153,7 @@ data "aws_cloudfront_origin_request_policy" "cdn_managed_all_viewer_origin_reque
 }
 
 resource "aws_cloudfront_function" "hydroserver_frontend_routing" {
-  name    = "frontend-routing"
+  name    = "frontend-routing-${var.instance}"
   runtime = "cloudfront-js-1.0"
   comment = "Preserve Vue client-side routing."
   code    = file("${path.module}/frontend-routing.js")
@@ -161,7 +161,7 @@ resource "aws_cloudfront_function" "hydroserver_frontend_routing" {
 }
 
 resource "aws_cloudfront_function" "hydroserver_x_forward_host" {
-  name    = "x-forwarded-host"
+  name    = "x-forwarded-host-${var.instance}"
   runtime = "cloudfront-js-1.0"
   comment = "Include x-forwarded-host in the header."
   code    = file("${path.module}/x-forwarded-host.js")
