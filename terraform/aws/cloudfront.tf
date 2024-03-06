@@ -179,7 +179,7 @@ resource "aws_cloudfront_origin_access_control" "hydroserver_oac" {
 }
 
 resource "aws_wafv2_web_acl" "hydroserver_core_rules" {
-  name        = "CoreRulesWebACL"
+  name        = "CoreRulesWebACL-${var.instance}"
   scope       = "CLOUDFRONT"
   description = "WAF web ACL with Core Rules"
 
