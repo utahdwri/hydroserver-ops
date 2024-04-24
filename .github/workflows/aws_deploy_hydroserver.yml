@@ -78,8 +78,8 @@ jobs:
             },
             {
               "Namespace": "aws:elasticbeanstalk:application:environment",
-              "OptionName": "DEPLOYED",
-              "Value": "True"
+              "OptionName": "DEPLOYMENT_BACKEND",
+              "Value": "aws"
             },
             {
               "Namespace": "aws:elasticbeanstalk:application:environment",
@@ -232,7 +232,7 @@ jobs:
           VITE_APP_VERSION=${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}
           VITE_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
           VITE_APP_GOOGLE_MAPS_MAP_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
-          VITE_APP_PROXY_BASE_URL=${{ secrets.PROXY_BASE_URL }}
+          VITE_APP_PROXY_BASE_URL=${{ vars.PROXY_BASE_URL }}
           VITE_APP_DISABLE_ACCOUNT_CREATION=${{ vars.DISABLE_ACCOUNT_CREATION == 'True' ? 'true' : 'false' }}
           VITE_APP_GOOGLE_OAUTH_ENABLED=${{ secrets.OAUTH_GOOGLE_CLIENT ? 'true' : 'false' }}
           VITE_APP_ORCID_OAUTH_ENABLED=${{ secrets.OAUTH_ORCID_CLIENT ? 'true' : 'false' }}
