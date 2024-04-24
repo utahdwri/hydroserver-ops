@@ -66,8 +66,8 @@ resource "aws_elastic_beanstalk_environment" "hydroserver_django_env" {
 
   setting {
     namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "DEPLOYED"
-    value     = "True"
+    name      = "DEPLOYMENT_BACKEND"
+    value     = "aws"
   }
 
   setting {
