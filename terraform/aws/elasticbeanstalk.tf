@@ -66,8 +66,38 @@ resource "aws_elastic_beanstalk_environment" "hydroserver_django_env" {
 
   setting {
     namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "DEPLOYED"
-    value     = "True"
+    name      = "DEPLOYMENT_BACKEND"
+    value     = "aws"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "DISABLE_ACCOUNT_CREATION"
+    value     = "False"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "EMAIL_HOST"
+    value     = ""
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "EMAIL_PORT"
+    value     = ""
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "EMAIL_HOST_USER"
+    value     = ""
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "EMAIL_HOST_PASSWORD"
+    value     = ""
   }
 
   setting {
