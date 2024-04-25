@@ -237,7 +237,6 @@ jobs:
           VITE_APP_GOOGLE_OAUTH_ENABLED=${{ secrets.OAUTH_GOOGLE_CLIENT ? 'true' : 'false' }}
           VITE_APP_ORCID_OAUTH_ENABLED=${{ secrets.OAUTH_ORCID_CLIENT ? 'true' : 'false' }}
           VITE_APP_HYDROSHARE_OAUTH_ENABLED=${{ secrets.OAUTH_HYDROSHARE_CLIENT ? 'true' : 'false' }}
-          EOF
 
       - name: Build Frontend
         working-directory: ./frontend
