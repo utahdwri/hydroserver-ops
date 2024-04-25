@@ -233,10 +233,10 @@ jobs:
           VITE_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
           VITE_APP_GOOGLE_MAPS_MAP_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
           VITE_APP_PROXY_BASE_URL=${{ vars.PROXY_BASE_URL }}
-          VITE_APP_DISABLE_ACCOUNT_CREATION=${{ vars.DISABLE_ACCOUNT_CREATION == 'True' ? 'true' : 'false' }}
-          VITE_APP_GOOGLE_OAUTH_ENABLED=${{ secrets.OAUTH_GOOGLE_CLIENT ? 'true' : 'false' }}
-          VITE_APP_ORCID_OAUTH_ENABLED=${{ secrets.OAUTH_ORCID_CLIENT ? 'true' : 'false' }}
-          VITE_APP_HYDROSHARE_OAUTH_ENABLED=${{ secrets.OAUTH_HYDROSHARE_CLIENT ? 'true' : 'false' }}
+          VITE_APP_DISABLE_ACCOUNT_CREATION=${{ if vars.DISABLE_ACCOUNT_CREATION == 'True' }}true{{ else }}false{{ endif }}
+          VITE_APP_GOOGLE_OAUTH_ENABLED=${{ if vars.OAUTH_GOOGLE_CLIENT == 'True' }}true{{ else }}false{{ endif }}
+          VITE_APP_ORCID_OAUTH_ENABLED=${{ if vars.OAUTH_ORCID_CLIENT == 'True' }}true{{ else }}false{{ endif }}
+          VITE_APP_HYDROSHARE_OAUTH_ENABLED=${{ if vars.OAUTH_HYDROSHARE_CLIENT == 'True' }}true{{ else }}false{{ endif }}
 
       - name: Build Frontend
         working-directory: ./frontend
