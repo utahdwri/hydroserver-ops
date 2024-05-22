@@ -205,12 +205,12 @@ jobs:
     
       - name: Get Latest HydroServer Version
         id: get_latest_tag
-        run: echo "tag=$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-webapp-front/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
+        run: echo "tag=$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-data-management-app/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
     
       - name: Checkout Frontend Repo
         uses: actions/checkout@v4
         with:
-          repository: hydroserver2/hydroserver-webapp-front
+          repository: hydroserver2/hydroserver-data-management-app
           ref: refs/tags/${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}
           path: frontend
 
