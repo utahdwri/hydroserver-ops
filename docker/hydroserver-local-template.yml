@@ -16,7 +16,7 @@ services:
   django:
     image: python:3.8
     volumes:
-      - {hydroserver-webapp-back}:/app
+      - {hydroserver-api-services}:/app
       - staticfiles:/app/staticfiles
     working_dir: /app
     command:
