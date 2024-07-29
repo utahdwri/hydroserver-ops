@@ -14,7 +14,7 @@ services:
       - timescale_data:/var/lib/postgresql/data
 
   django:
-    image: python:3.8
+    image: python:3.11
     volumes:
       - {hydroserver-api-services}:/app
       - staticfiles:/app/staticfiles
