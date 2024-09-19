@@ -29,6 +29,11 @@ jobs:
     runs-on: ubuntu-20.04
     environment: ${{ github.event.inputs.environment }}
     steps:
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+    
       - name: configureawscredentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
