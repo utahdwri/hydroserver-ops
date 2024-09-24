@@ -22,7 +22,8 @@
             "Sid": "AllowAttachmentOfPoliciesToHydroServerEC2Roles",
             "Effect": "Allow",
             "Action": [
-                "iam:AttachRolePolicy"
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy"
             ],
             "Resource": "arn:aws:iam::YOUR_ACCOUNT_ID:role/hydroserver-ec2*",
             "Condition": {
