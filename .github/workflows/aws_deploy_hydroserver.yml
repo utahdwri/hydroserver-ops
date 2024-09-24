@@ -149,6 +149,24 @@ jobs:
           ]
           EOF
 
+      - name: Check if ElasticBeanstalk Application Version Exists
+        id: eb_version_exists
+        working-directory: ./backend
+        run: |
+          aws elasticbeanstalk describe-application-versions \
+          --application-name hydroserver-${{ github.event.inputs.environment }} \
+          --version-label "${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
+          || echo "Application version does not exist."
+      
+      - name: Delete Existing ElasticBeanstalk Application Version
+        if: success() && steps.eb_version_exists.outputs != ''  # Only run if the version exists
+        working-directory: ./backend
+        run: |
+          aws elasticbeanstalk delete-application-version \
+          --application-name hydroserver-${{ github.event.inputs.environment }} \
+          --version-label "${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}" \
+          --delete-source-bundle
+
       - name: Create ElasticBeanstalk Application Version
         working-directory: ./backend
         run: |
