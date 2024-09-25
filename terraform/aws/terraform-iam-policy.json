@@ -12,6 +12,7 @@
                 "iam:CreateInstanceProfile",
                 "iam:DeleteInstanceProfile",
                 "iam:CreateRole",
+                "iam:DeleteRole",
                 "iam:PutRolePermissionsBoundary"
             ],
             "Resource": [
