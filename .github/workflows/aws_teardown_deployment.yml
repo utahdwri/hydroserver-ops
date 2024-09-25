@@ -46,5 +46,20 @@ jobs:
         if: steps.plan_destroy.outcome == 'failure'
         run: exit 1
 
+      - name: Empty hydroserver-web S3 bucket
+        run: |
+          aws s3 rm s3://hydroserver-web-${{ github.event.inputs.environment }}-${{ vars.AWS_ACCOUNT_ID }} --recursive
+        continue-on-error: true
+
+      - name: Empty hydroserver-storage S3 bucket
+        run: |
+          aws s3 rm s3://hydroserver-storage-${{ github.event.inputs.environment }}-${{ vars.AWS_ACCOUNT_ID }} --recursive
+        continue-on-error: true
+
+      - name: Empty hydroserver-django S3 bucket
+        run: |
+          aws s3 rm s3://hydroserver-django-${{ github.event.inputs.environment }}-${{ vars.AWS_ACCOUNT_ID }} --recursive
+        continue-on-error: true
+
       - name: Terraform Destroy
         run: terraform destroy -auto-approve -var instance="${{ github.event.inputs.environment }}" -var region="${{ vars.AWS_REGION }}"
