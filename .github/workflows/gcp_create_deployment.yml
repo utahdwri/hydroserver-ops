@@ -19,16 +19,16 @@ jobs:
       run:
         working-directory: ./terraform/gcp
     steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+    
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v2
         with:
           project_id: ${{ vars.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ vars.GCP_IDENTITY_PROVIDER }}
-  
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-        with:
-          ref: main
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
