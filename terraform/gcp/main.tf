@@ -5,11 +5,7 @@ terraform {
       version = "~> 4.0"
     }
   }
-  backend "gcs" {
-    bucket = var.bucket
-    prefix = var.prefix
-    impersonate_service_account = var.impersonate_service_account
-  }
+  backend "gcs" {}
   required_version = ">= 1.2.0"
 }
 
@@ -18,9 +14,6 @@ provider "google" {
   region  = var.region
 }
 
-variable "bucket" {}
-variable "prefix" {}
-variable "impersonate_service_account" {}
 variable "instance" {}
 variable "project_id" {}
 variable "region" {}
