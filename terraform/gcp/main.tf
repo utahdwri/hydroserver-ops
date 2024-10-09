@@ -5,7 +5,10 @@ terraform {
       version = "~> 4.0"
     }
   }
-  backend "gcs" {}
+  backend "gcs" {
+    bucket = var.bucket
+    prefix = var.prefix
+  }
   required_version = ">= 1.2.0"
 }
 
@@ -14,6 +17,8 @@ provider "google" {
   region  = var.region
 }
 
+variable "bucket" {}
+variable "prefix" {}
 variable "instance" {}
 variable "project_id" {}
 variable "region" {}
