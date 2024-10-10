@@ -9,18 +9,18 @@ resource "google_app_engine_standard_app_version" "hydroserver_django_service" {
     shell = "gunicorn -b :$PORT hydroserver.wsgi"
   }
 
-  # ------------------------------ #
-  # Scaling Configuration          #
-  # ------------------------------ #
-  
+  # ----------------------------- #
+  # Scaling Configuration         #
+  # ----------------------------- #
+
   automatic_scaling {
-    max_instances = 1
+    max_idle_instances = 1
     min_idle_instances = 0
   }
 
-  # ------------------------------ #
-  # Environment Variables          #
-  # ------------------------------ #
+  # ----------------------------- #
+  # Environment Variables         #
+  # ----------------------------- #
 
   env_variables = {
     "ADMIN_EMAIL"              = ""
@@ -46,11 +46,9 @@ resource "google_app_engine_standard_app_version" "hydroserver_django_service" {
 
   handlers {
     url_regex = ".*"
-    script    = "auto"
-  }
-
-  resources {
-    cpu    = 1
-    memory = "512MB"
+    static_files {
+      path = "/"
+      upload_path_regex = ".*"
+    }
   }
 }
