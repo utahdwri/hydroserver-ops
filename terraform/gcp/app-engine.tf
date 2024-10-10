@@ -5,6 +5,13 @@ resource "google_app_engine_standard_app_version" "hydroserver_django_service" {
   service                = "hydroserver-${var.instance}"
   version_id             = "v0"
   runtime                = "python311"
+
+  deployment {
+    zip {
+      source_url = ""
+    }
+  }
+
   entrypoint {
     shell = "gunicorn -b :$PORT hydroserver.wsgi"
   }
