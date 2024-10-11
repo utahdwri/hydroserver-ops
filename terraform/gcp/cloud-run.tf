@@ -33,8 +33,8 @@ resource "google_cloud_run_service" "hydroserver_api" {
 # -------------------------------------------------- #
 
 resource "google_cloud_run_service_iam_member" "hydroserver_api_public_access" {
-  service  = google_cloud_run_service.django_api.name
-  location = google_cloud_run_service.django_api.location
+  service  = google_cloud_run_service.hydroserver_api.name
+  location = google_cloud_run_service.hydroserver_api.location
   role     = "roles/run.invoker"
   member   = "allUsers"
 }
