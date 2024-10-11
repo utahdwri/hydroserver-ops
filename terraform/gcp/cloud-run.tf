@@ -8,9 +8,9 @@
 #}
 
 # Enable Container Registry API
-#resource "google_project_service" "container_registry" {
-#  service = "containerregistry.googleapis.com"
-#}
+resource "google_project_service" "container_registry" {
+  service = "containerregistry.googleapis.com"
+}
 
 resource "google_cloud_run_service" "hydroserver_api" {
   name     = "hydroserver-api-${var.instance}"
