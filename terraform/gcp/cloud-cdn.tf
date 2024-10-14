@@ -6,17 +6,29 @@ resource "google_compute_global_address" "default" {
   name = "hydroserver-api-address-${var.instance}"
 }
 
+resource "google_compute_network_endpoint_group" "cloud_run_neg" {
+  name               = "cloud-run-neg-${var.instance}"
+  network_endpoint_type = "serverless"
+  region             = var.region
+
+  endpoint {
+    url = google_cloud_run_service.hydroserver_api.status[0].url
+  }
+}
+
 resource "google_compute_backend_service" "cloud_run_backend" {
   name                  = "cloud-run-backend-${var.instance}"
   load_balancing_scheme = "EXTERNAL"
+
   backend {
-    group = google_cloud_run_service.hydroserver_api.status[0].url
+    group = google_compute_network_endpoint_group.cloud_run_neg.id
   }
 
-health_checks = [google_compute_health_check.default.id]
+  health_checks = [google_compute_health_check.default.id]
   timeout_sec  = 10
   port_name    = "http"
-  enable_cdn = true
+
+  enable_cdn = true  # Enable CDN
 }
 
 resource "google_compute_health_check" "default" {
@@ -28,23 +40,6 @@ resource "google_compute_health_check" "default" {
 
   http_health_check {
     port = 8080
-    request_path = "/health"
+    request_path = "/health"  # Adjust if you have a different health check endpoint
   }
-}
-
-resource "google_compute_url_map" "default" {
-  name            = "url-map-${var.instance}"
-  default_service = google_compute_backend_service.cloud_run_backend.id
-}
-
-resource "google_compute_target_http_proxy" "default" {
-  name    = "http-proxy-${var.instance}"
-  url_map = google_compute_url_map.default.id
-}
-
-resource "google_compute_global_forwarding_rule" "default" {
-  name       = "forwarding-rule-${var.instance}"
-  target     = google_compute_target_http_proxy.default.id
-  port_range = "80"
-  ip_address = google_compute_global_address.default.address
 }
