@@ -29,12 +29,14 @@ resource "google_cloud_run_service" "hydroserver_api" {
 }
 
 # -------------------------------------------------- #
-# HydroServer GCP Cloud Run Service Public Access    #
+# HydroServer GCP Cloud Run Service NEG              #
 # -------------------------------------------------- #
 
-#resource "google_cloud_run_service_iam_member" "hydroserver_api_public_access" {
-#  service  = google_cloud_run_service.hydroserver_api.name
-#  location = google_cloud_run_service.hydroserver_api.location
-#  role     = "roles/run.invoker"
-#  member   = "allUsers"
-#}
+resource "google_compute_region_network_endpoint_group" "hydroserver_neg" {
+  name                  = "hydroserver-api-neg-${var.instance}"
+  region                = var.region
+  network_endpoint_type = "SERVERLESS"
+  cloud_run {
+    service = google_cloud_run_service.hydroserver_api.name
+  }
+}
