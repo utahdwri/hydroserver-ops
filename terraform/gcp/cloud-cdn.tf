@@ -16,8 +16,6 @@ resource "google_compute_backend_service" "hydroserver_backend" {
     cache_mode        = "CACHE_ALL_STATIC"
     default_ttl      = 3600
     max_ttl          = 86400
-    min_ttl          = 60
-    signed_url_cache_mode = "USE_CACHED"
   }
 }
 
