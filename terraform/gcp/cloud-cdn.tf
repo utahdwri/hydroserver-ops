@@ -30,6 +30,7 @@ resource "google_compute_backend_service" "default_backend" {
   cdn_policy {
     # Enable Google Cloud CDN on the backend service
     cache_mode = "CACHE_ALL_STATIC"
+    signed_url_cache_max_age_sec = 3600
   }
   backend {
     group = google_compute_region_network_endpoint_group.cloud_run_neg.id
