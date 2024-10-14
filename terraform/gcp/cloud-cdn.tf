@@ -7,7 +7,7 @@ resource "google_compute_backend_service" "hydroserver_backend" {
   load_balancing_scheme = "EXTERNAL"
 
   backend {
-    group = "projects/${var.project_id}/locations/${google_cloud_run_service.hydroserver_api.location}/services/${google_cloud_run_service.hydroserver_api.name}"
+    group = google_compute_region_backend_service.hydroserver_service.id
   }
 
   enable_cdn = true
@@ -29,6 +29,6 @@ resource "google_compute_region_backend_service" "hydroserver_service" {
   protocol    = "HTTP"
 
   backend {
-    group = google_cloud_run_service.hydroserver_api.id
+    group = "projects/${var.project_id}/locations/${google_cloud_run_service.hydroserver_api.location}/services/${google_cloud_run_service.hydroserver_api.name}"
   }
 }
