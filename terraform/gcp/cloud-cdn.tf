@@ -11,7 +11,7 @@ resource "google_compute_backend_service" "default_backend" {
   load_balancing_scheme   = "EXTERNAL"
 
   backend {
-    group = google_cloud_run_service.hydroserver_api.id
+    group = "projects/${var.project_id}/locations/${var.region}/services/${google_cloud_run_service.hydroserver_api.name}"
   }
 
   health_checks = [google_compute_health_check.default_health_check.id]
