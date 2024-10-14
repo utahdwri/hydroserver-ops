@@ -7,7 +7,7 @@ resource "google_compute_backend_service" "hydroserver_backend" {
   load_balancing_scheme = "EXTERNAL"
 
   backend {
-    group = google_compute_region_backend_service.hydroserver_service.instance_group
+    group = google_compute_region_backend_service.hydroserver_service.id
   }
 
   enable_cdn = true
