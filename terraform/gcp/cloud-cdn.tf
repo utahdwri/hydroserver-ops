@@ -29,6 +29,6 @@ resource "google_compute_region_backend_service" "hydroserver_service" {
   protocol    = "HTTP"
 
   backend {
-    group = "projects/${var.project_id}/locations/${google_cloud_run_service.hydroserver_api.location}/services/${google_cloud_run_service.hydroserver_api.name}"
+    group = google_compute_region_network_endpoint_group.hydroserver_neg.id
   }
 }
