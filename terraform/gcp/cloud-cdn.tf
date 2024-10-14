@@ -1,51 +1,57 @@
 # -------------------------------------------------- #
-# Google Cloud Load Balancer with CDN for Cloud Run   #
+# Google Cloud CDN Configuration for Cloud Run      #
 # -------------------------------------------------- #
 
-resource "google_compute_region_network_endpoint_group" "cloud_run_neg" {
-  name                  = "cloud-run-neg-${var.instance}"
-  region                = var.region
-  network_endpoint_type = "SERVERLESS"
-  cloud_run {
-    service = google_cloud_run_service.hydroserver_api.name
-  }
-}
-
-resource "google_compute_global_forwarding_rule" "http_lb_forwarding_rule" {
-  name        = "http-forwarding-rule-${var.instance}"
-  load_balancing_scheme = "EXTERNAL"
-  port_range  = "80"
-  target      = google_compute_target_http_proxy.http_proxy.id
-}
-
-resource "google_compute_url_map" "http_lb_url_map" {
-  name            = "http-url-map-${var.instance}"
-  default_service = google_compute_backend_service.default_backend.id
+resource "google_compute_global_address" "default_ip" {
+  name = "hydroserver-ip"
 }
 
 resource "google_compute_backend_service" "default_backend" {
-  name                  = "default-backend-${var.instance}"
-  load_balancing_scheme = "EXTERNAL"
-  protocol              = "HTTP"
-  cdn_policy {
-    # Enable Google Cloud CDN on the backend service
-    cache_mode = "CACHE_ALL_STATIC"
-    signed_url_cache_max_age_sec = 3600
-  }
+  name                    = "hydroserver-backend"
+  load_balancing_scheme   = "EXTERNAL"
+
   backend {
-    group = google_compute_region_network_endpoint_group.cloud_run_neg.id
+    group = google_cloud_run_service.hydroserver_api.id
+  }
+
+  health_checks = [google_compute_health_check.default_health_check.id]
+
+  cdn_policy {
+    cache_key_policy {
+      include_host          = true
+      include_protocol      = true
+      include_query_string  = true
+    }
+    signed_url_cache_max_age_sec = 3600  # Cache for 1 hour
   }
 }
 
-resource "google_compute_target_http_proxy" "http_proxy" {
-  name    = "http-lb-proxy-${var.instance}"
-  url_map = google_compute_url_map.http_lb_url_map.id
+resource "google_compute_health_check" "default_health_check" {
+  name                = "hydroserver-health-check"
+  check_interval_sec  = 10
+  timeout_sec         = 4
+  healthy_threshold   = 2
+  unhealthy_threshold = 2
+
+  http_health_check {
+    port = 8080
+    request_path = "/"
+  }
 }
 
-resource "google_compute_global_address" "http_lb_ip" {
-  name = "http-lb-ip-${var.instance}"
+resource "google_compute_url_map" "default_url_map" {
+  name            = "hydroserver-url-map"
+  default_service = google_compute_backend_service.default_backend.id
 }
 
-output "http_lb_ip_address" {
-  value = google_compute_global_address.http_lb_ip.address
+resource "google_compute_target_http_proxy" "default_proxy" {
+  name    = "hydroserver-http-proxy"
+  url_map = google_compute_url_map.default_url_map.id
+}
+
+resource "google_compute_global_forwarding_rule" "default_rule" {
+  name        = "hydroserver-forwarding-rule"
+  target      = google_compute_target_http_proxy.default_proxy.id
+  port_range  = "80"
+  ip_address  = google_compute_global_address.default_ip.address
 }
