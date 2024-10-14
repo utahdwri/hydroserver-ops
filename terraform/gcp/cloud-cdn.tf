@@ -9,8 +9,8 @@ resource "google_compute_global_address" "default" {
 resource "google_compute_network_endpoint_group" "cloud_run_neg" {
   name                    = "cloud-run-neg-${var.instance}"
   network_endpoint_type   = "serverless"
-  location                = var.region
-  serverless_endpoint {
+  network                 = "default"
+  endpoint {
     url = google_cloud_run_service.hydroserver_api.status[0].url
   }
 }
