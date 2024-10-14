@@ -1,5 +1,5 @@
 # -------------------------------------------------- #
-# Google Cloud CDN Configuration for Cloud Run       #
+# Google Cloud CDN Configuration for Cloud Run      #
 # -------------------------------------------------- #
 
 resource "google_compute_global_address" "default_ip" {
@@ -19,25 +19,12 @@ resource "google_compute_health_check" "default_health_check" {
   }
 }
 
-resource "google_compute_region_network_endpoint_group" "cloud_run_neg" {
-  name               = "hydroserver-neg"
-  network_endpoint_type = "serverless"
-  region            = var.region
-
-  network_endpoints {
-    port    = 8080
-    serverless_endpoint {
-      service = google_cloud_run_service.hydroserver_api.id
-    }
-  }
-}
-
 resource "google_compute_backend_service" "default_backend" {
   name                    = "hydroserver-backend"
   load_balancing_scheme   = "EXTERNAL"
 
   backend {
-    group = google_compute_region_network_endpoint_group.cloud_run_neg.id
+    group = "projects/${var.project_id}/locations/${var.region}/services/${google_cloud_run_service.hydroserver_api.name}"
   }
 
   health_checks = [google_compute_health_check.default_health_check.id]
