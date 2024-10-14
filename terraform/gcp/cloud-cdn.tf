@@ -19,7 +19,6 @@ resource "google_compute_backend_service" "hydroserver_backend" {
     cache_key_policy {
       include_host          = true
       include_protocol      = true
-      include_query         = false
     }
   }
 }
