@@ -1,34 +1,34 @@
-# ------------------------------------------------ #
-# HydroServer CloudFront Distribution              #
-# ------------------------------------------------ #
+# -------------------------------------------------- #
+# CloudFront Distribution                          #
+# -------------------------------------------------- #
 
 resource "aws_cloudfront_distribution" "hydroserver_distribution" {
   origin {
-    domain_name = aws_s3_bucket.hydroserver_web_bucket.bucket_regional_domain_name
+    origin_id                = "hydroserver-data-mgmt-app"
+    domain_name              = aws_s3_bucket.hydroserver_data_mgmt_app_bucket.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.hydroserver_oac.id
-    origin_id   = "hydroserver-web"
   }
 
   origin {
-    domain_name = aws_s3_bucket.hydroserver_storage_bucket.bucket_regional_domain_name
+    origin_id                = "hydroserver-storage"
+    domain_name              = aws_s3_bucket.hydroserver_storage_bucket.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.hydroserver_oac.id
-    origin_id   = "hydroserver-storage"
   }
 
   origin {
-    domain_name = aws_elastic_beanstalk_environment.hydroserver_django_env.endpoint_url
-    origin_id   = "hydroserver-django"
+    origin_id   = "hydroserver-api"
+    domain_name = aws_apprunner_service.hydroserver_api.service_url
 
     custom_origin_config {
+      origin_protocol_policy = "https-only"
       http_port = "80"
       https_port = "443"
-      origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
     }
   }
 
   default_cache_behavior {
-    target_origin_id = "hydroserver-web"
+    target_origin_id = "hydroserver-data-mgmt-app"
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
@@ -51,22 +51,7 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
     path_pattern     = "/api/sensorthings/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "hydroserver-django"
-    viewer_protocol_policy = "allow-all"
-    cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
-
-    function_association {
-      event_type   = "viewer-request"
-      function_arn   = aws_cloudfront_function.hydroserver_x_forward_host.arn
-    }
-  }
-
-  ordered_cache_behavior {
-    path_pattern     = "/api/*"
-    allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "hydroserver-django"
+    target_origin_id = "hydroserver-api"
     viewer_protocol_policy = "redirect-to-https"
     cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
@@ -78,23 +63,38 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
   }
 
   ordered_cache_behavior {
-    path_pattern     = "/admin/*"
-    allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "hydroserver-django"
-    viewer_protocol_policy = "redirect-to-https"
+    path_pattern             = "/api/*"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD"]
+    target_origin_id         = "hydroserver-api"
+    viewer_protocol_policy   = "redirect-to-https"
     cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
 
     function_association {
-      event_type   = "viewer-request"
+      event_type     = "viewer-request"
       function_arn   = aws_cloudfront_function.hydroserver_x_forward_host.arn
     }
   }
 
   ordered_cache_behavior {
-    path_pattern     = "/photos/*"
-    target_origin_id = "hydroserver-storage"
+    path_pattern             = "/admin/*"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD"]
+    target_origin_id         = "hydroserver-api"
+    viewer_protocol_policy   = "redirect-to-https"
+    cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
+
+    function_association {
+      event_type     = "viewer-request"
+      function_arn   = aws_cloudfront_function.hydroserver_x_forward_host.arn
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/photos/*"
+    target_origin_id       = "hydroserver-api-storage"
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
@@ -109,8 +109,8 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
   }
 
   ordered_cache_behavior {
-    path_pattern     = "/static/*"
-    target_origin_id = "hydroserver-storage"
+    path_pattern           = "/static/*"
+    target_origin_id       = "hydroserver-api-storage"
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
@@ -138,6 +138,10 @@ resource "aws_cloudfront_distribution" "hydroserver_distribution" {
   enabled             = true
   is_ipv6_enabled     = true
   web_acl_id          = aws_wafv2_web_acl.hydroserver_core_rules.arn
+
+  tags = {
+    (var.tag_key) = local.tag_value
+  }
 }
 
 # ------------------------------------------------ #
@@ -223,5 +227,9 @@ resource "aws_wafv2_web_acl" "hydroserver_core_rules" {
       metric_name                = "AWS-AWSManagedRulesCommonRuleSet"
       sampled_requests_enabled   = true
     }
+  }
+
+  tags = {
+    (var.tag_key) = local.tag_value
   }
 }

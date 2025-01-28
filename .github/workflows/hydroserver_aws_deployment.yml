@@ -1,0 +1,279 @@
+name: HydroServer AWS Cloud Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Enter a deployment environment to use.'
+        type: environment
+        required: true
+      action:
+        description: 'Enter the action you want to perform.'
+        type: choice
+        required: true
+        options:
+        - Initialize HydroServer Deployment
+        - Update HydroServer Deployment
+        - Teardown HydroServer Deployment
+      release:
+        description: 'Enter the HydroServer release tag to use.' 
+        type: string
+        required: false
+        default: 'latest'
+
+permissions:
+  contents: write
+  id-token: write
+  actions: write
+
+jobs:
+  check-environment-variables:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+      AWS_IAM_ROLE: ${{ vars.AWS_IAM_ROLE }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      TERRAFORM_BUCKET: ${{ vars.TERRAFORM_BUCKET }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    outputs:
+      database_url_exists: ${{ steps.check_database_url.outputs.database_url_exists }}
+    steps:
+      - name: Check Required Environment Variables
+        run: |
+          echo "Checking required environment variables..."
+          required_vars=(AWS_ACCOUNT_ID AWS_IAM_ROLE AWS_REGION TERRAFORM_BUCKET)
+          for var in "${required_vars[@]}"; do
+            if [ -z "${!var}" ]; then
+              echo "Error: Environment variable $var is not defined."
+              exit 1
+            fi
+          done
+      - name: Check Database URL Secret
+        id: check_database_url
+        run: |
+          if [[ -z "$DATABASE_URL" ]]; then
+            echo "::set-output name=database_url_exists::false"
+          else
+            echo "::set-output name=database_url_exists::true"
+          fi
+
+  setup-hydroserver-database:
+    needs: check-environment-variables
+    if: needs.check-environment-variables.outputs.database_url_exists == 'false' && github.event.inputs.action == 'Initialize HydroServer Deployment'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    env: 
+      database_url: ${{ secrets.DATABASE_URL }}
+    defaults:
+      run:
+        working-directory: ./terraform/aws/database
+    steps:
+      - name: Checkout Ops Repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_IAM_ROLE }}
+          role-session-name: create-hydroserver-resources
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+      - name: Terraform Init
+        run: |
+          terraform init \
+          -backend-config="bucket=${{ vars.TERRAFORM_BUCKET }}" \
+          -backend-config="region=${{ vars.AWS_REGION }}" \
+          -backend-config="key=state/hydroserver_database_${{ github.event.inputs.environment }}"
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+          -no-color -input=false \
+          -var "instance=${{ github.event.inputs.environment }}" \
+          -var "region=${{ vars.AWS_REGION }}" \
+          -var "tag_key=${{ vars.AWS_TAG_KEY || 'hydroserver-instance' }}" \
+          -var "tag_value=${{ vars.AWS_TAG_VALUE || github.event.inputs.environment }}"
+        continue-on-error: true
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+      - name: Terraform Apply
+        run: |
+          terraform apply \
+          -auto-approve -input=false \
+          -var "instance=${{ github.event.inputs.environment }}" \
+          -var "region=${{ vars.AWS_REGION }}" \
+          -var "tag_key=${{ vars.AWS_TAG_KEY || 'hydroserver-instance' }}" \
+          -var "tag_value=${{ vars.AWS_TAG_VALUE || github.event.inputs.environment }}"
+
+  link-hydroserver-database:
+    needs: check-environment-variables
+    if: needs.check-environment-variables.outputs.database_url_exists == 'true' && github.event.inputs.action == 'Initialize HydroServer Deployment'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    env: 
+      database_url: ${{ secrets.DATABASE_URL }}
+    defaults:
+      run:
+        working-directory: ./terraform/aws/database/connection
+    steps:
+      - name: Checkout Ops Repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_IAM_ROLE }}
+          role-session-name: create-hydroserver-resources
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+      - name: Terraform Init
+        run: |
+          terraform init \
+          -backend-config="bucket=${{ vars.TERRAFORM_BUCKET }}" \
+          -backend-config="region=${{ vars.AWS_REGION }}" \
+          -backend-config="key=state/hydroserver_database_${{ github.event.inputs.environment }}"
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+          -no-color -input=false \
+          -var "instance=${{ github.event.inputs.environment }}" \
+          -var "region=${{ vars.AWS_REGION }}" \
+          -var "database_url=${{ secrets.DATABASE_URL }}" \
+          -var "tag_key=${{ vars.AWS_TAG_KEY || 'hydroserver-instance' }}" \
+          -var "tag_value=${{ vars.AWS_TAG_VALUE || github.event.inputs.environment }}"
+        continue-on-error: true
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+      - name: Terraform Apply
+        run: |
+          terraform apply \
+          -auto-approve -input=false \
+          -var "instance=${{ github.event.inputs.environment }}" \
+          -var "region=${{ vars.AWS_REGION }}" \
+          -var "database_url=${{ secrets.DATABASE_URL }}" \
+          -var "tag_key=${{ vars.AWS_TAG_KEY || 'hydroserver-instance' }}" \
+          -var "tag_value=${{ vars.AWS_TAG_VALUE || github.event.inputs.environment }}"
+
+  setup-hydroserver-services:
+    needs: [link-hydroserver-database, setup-hydroserver-database]
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    if: always() && (needs.link-hydroserver-database.result == 'success' || needs.setup-hydroserver-database.result == 'success') && github.event.inputs.action == 'Initialize HydroServer Deployment'
+    defaults:
+      run:
+        working-directory: ./terraform/aws/app
+    steps:
+      - name: Checkout Ops Repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_IAM_ROLE }}
+          role-session-name: create-hydroserver-resources
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+      - name: Terraform Init
+        run: |
+          terraform init \
+          -backend-config="bucket=${{ vars.TERRAFORM_BUCKET }}" \
+          -backend-config="region=${{ vars.AWS_REGION }}" \
+          -backend-config="key=state/hydroserver_application_${{ github.event.inputs.environment }}"
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+          -no-color -input=false \
+          -var "instance=${{ github.event.inputs.environment }}" \
+          -var "region=${{ vars.AWS_REGION }}" \
+          -var "tag_key=${{ vars.AWS_TAG_KEY || 'hydroserver-instance' }}" \
+          -var "tag_value=${{ vars.AWS_TAG_VALUE || github.event.inputs.environment }}"
+        continue-on-error: true
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+      - name: Terraform Apply
+        run: |
+          terraform apply \
+          -auto-approve -input=false \
+          -target=aws_ecr_repository.hydroserver_api_repository \
+          -target=aws_vpc_endpoint.ecr_api_endpoint \
+          -target=aws_vpc_endpoint.ecr_dkr_endpoint \
+          -var "instance=${{ github.event.inputs.environment }}" \
+          -var "region=${{ vars.AWS_REGION }}" \
+          -var "tag_key=${{ vars.AWS_TAG_KEY || 'hydroserver-instance' }}" \
+          -var "tag_value=${{ vars.AWS_TAG_VALUE || github.event.inputs.environment }}"
+      - name: Log in to AWS ECR
+        run: |
+          aws ecr get-login-password --region ${{ vars.AWS_REGION }} | docker login --username AWS --password-stdin "${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com"
+      - name: Pull image from GHCR
+        run: |
+          docker pull ghcr.io/hydroserver2/hydroserver-api-services:latest
+      - name: Tag Docker Image for ECR
+        run: |
+          docker tag ghcr.io/hydroserver2/hydroserver-api-services:latest \
+          ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-api-${{ github.event.inputs.environment }}:latest
+      - name: Push Docker Image to AWS ECR
+        run: |
+          docker push ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-api-${{ github.event.inputs.environment }}:latest
+      - name: Terraform Apply
+        run: |
+          terraform apply \
+          -auto-approve -input=false \
+          -var "instance=${{ github.event.inputs.environment }}" \
+          -var "region=${{ vars.AWS_REGION }}" \
+          -var "tag_key=${{ vars.AWS_TAG_KEY || 'hydroserver-instance' }}" \
+          -var "tag_value=${{ vars.AWS_TAG_VALUE || github.event.inputs.environment }}" 
+
+  teardown-hydroserver-application:
+    needs: check-environment-variables
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    if: success() && github.event.inputs.action == 'Teardown HydroServer Deployment'
+    defaults:
+      run:
+        working-directory: ./terraform/aws/app
+    steps:
+      - name: Checkout Ops Repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_IAM_ROLE }}
+          role-session-name: create-hydroserver-resources
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+      - name: Terraform Init
+        run: |
+          terraform init \
+          -backend-config="bucket=${{ vars.TERRAFORM_BUCKET }}" \
+          -backend-config="region=${{ vars.AWS_REGION }}" \
+          -backend-config="key=state/hydroserver_application_${{ github.event.inputs.environment }}"
+      - name: Terraform Plan Destroy
+        id: plan_destroy
+        run: |
+          terraform plan -destroy -no-color -input=false \
+          -var instance="${{ github.event.inputs.environment }}" \
+          -var region="${{ vars.AWS_REGION }}"
+        continue-on-error: true
+      - name: Terraform Plan Destroy Status
+        if: steps.plan_destroy.outcome == 'failure'
+        run: exit 1
+      - name: Terraform Destroy
+        run: |
+          terraform destroy -auto-approve -input=false \
+          -var instance="${{ github.event.inputs.environment }}" \
+          -var region="${{ vars.AWS_REGION }}"
