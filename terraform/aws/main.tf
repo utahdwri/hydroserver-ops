@@ -26,6 +26,12 @@ variable "hydroserver_version" {
   type        = string
   default     = "latest"
 }
+variable "database_url" {
+  description = "A database connection for HydroServer to use."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
 variable "tag_key" {
   description = "The key of the AWS tag that will be attached to this HydroServer instance."
   type        = string
@@ -42,32 +48,3 @@ locals {
 }
 
 data "aws_caller_identity" "current" {}
-
-data "aws_vpc" "hydroserver_vpc" {
-  filter {
-    name   = "tag:Name"
-    values = ["hydroserver-${var.instance}"]
-  }
-}
-
-data "aws_subnets" "hydroserver_app_private_subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.hydroserver_vpc.id]
-  }
-  filter {
-    name   = "tag:Name"
-    values = ["hydroserver-private-app-${var.instance}-*"]
-  }
-}
-
-data "aws_subnets" "hydroserver_app_public_subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.hydroserver_vpc.id]
-  }
-  filter {
-    name   = "tag:Name"
-    values = ["hydroserver-public-app-${var.instance}-*"]
-  }
-}
