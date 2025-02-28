@@ -99,12 +99,14 @@ resource "aws_cloudfront_distribution" "url_map" {
   }
 
   ordered_cache_behavior {
-    path_pattern           = "/photos/*"
+    path_pattern           = "/media/*"
     target_origin_id       = "media"
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
+
+    trusted_key_groups = [aws_cloudfront_key_group.cloudfront_key_group.id]
 
     forwarded_values {
       query_string = false
@@ -136,19 +138,70 @@ resource "aws_cloudfront_distribution" "url_map" {
     }
   }
 
+  aliases = [local.domain]
+
   viewer_certificate {
-    cloudfront_default_certificate = true
-    minimum_protocol_version       = "TLSv1.2_2021"
+    acm_certificate_arn      = var.acm_certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   enabled             = true
   is_ipv6_enabled     = true
   web_acl_id          = aws_wafv2_web_acl.core_rules.arn
 
+  lifecycle {
+    ignore_changes = [
+      viewer_certificate,
+      aliases
+    ]
+  }
+
   tags = {
     (var.tag_key) = local.tag_value
   }
 }
+
+
+# ---------------------------------
+# RSA Key Pair
+# ---------------------------------
+
+resource "tls_private_key" "cloudfront_signing_key" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "aws_cloudfront_public_key" "cloudfront_pub_key" {
+  name        = "hydroserver-${var.instance}-public-key"
+  encoded_key = tls_private_key.cloudfront_signing_key.public_key_pem
+}
+
+resource "aws_cloudfront_key_group" "cloudfront_key_group" {
+  name  = "hydroserver-${var.instance}-key-group"
+  items = [aws_cloudfront_public_key.cloudfront_pub_key.id]
+}
+
+resource "aws_ssm_parameter" "signing_key_id" {
+  name        = "/hydroserver-${var.instance}-api/signing-key-id"
+  type        = "String"
+  value       = aws_cloudfront_public_key.cloudfront_pub_key.id
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
+resource "aws_ssm_parameter" "signing_key" {
+  name        = "/hydroserver-${var.instance}-api/signing-key"
+  type        = "SecureString"
+  value       = tls_private_key.cloudfront_signing_key.private_key_pem
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
 
 # ---------------------------------
 # CloudFront Access Controls
@@ -159,7 +212,7 @@ data "aws_cloudfront_cache_policy" "cdn_managed_caching_disabled_cache_policy" {
 }
 
 data "aws_cloudfront_origin_request_policy" "cdn_managed_all_viewer_origin_request_policy" {
-  name = "Managed-AllViewer"
+  name = "Managed-AllViewerExceptHostHeader"
 }
 
 resource "aws_cloudfront_function" "frontend_routing" {

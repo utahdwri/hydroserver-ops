@@ -6,7 +6,7 @@ terraform {
     }
   }
   backend "s3" {}
-  required_version = ">= 1.2.0"
+  required_version = ">= 1.10.0"
 }
 
 provider "aws" {
@@ -26,6 +26,15 @@ variable "hydroserver_version" {
   type        = string
   default     = "latest"
 }
+variable "proxy_base_url" {
+  description = "The URL HydroServer will be served from."
+  type        = string
+  default     = "https://www.example.com"
+}
+variable "acm_certificate_arn" {
+  description = "The ARN of the ACM certificate HydroServer will use."
+  type        = string
+}
 variable "database_url" {
   description = "A database connection for HydroServer to use."
   type        = string
@@ -44,7 +53,11 @@ variable "tag_value" {
 }
 
 locals {
-  tag_value = var.tag_value != "" ? var.tag_value : var.instance
+  domain_match   = regex("https?://([^/]+)", var.proxy_base_url)
+  domain         = replace(local.domain_match[0], "www.", "")
+  admin_email    = "hs-admin@${local.domain}"
+  accounts_email = "no-reply@${local.domain}"
+  tag_value      = var.tag_value != "" ? var.tag_value : var.instance
 }
 
 data "aws_caller_identity" "current" {}

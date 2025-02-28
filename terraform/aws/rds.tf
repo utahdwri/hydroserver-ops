@@ -15,10 +15,10 @@ resource "aws_db_instance" "rds_db_instance" {
   allocated_storage          = 20
   max_allocated_storage      = 100
 
-  publicly_accessible                 = true  # TODO false
-  # db_subnet_group_name                = aws_db_subnet_group.rds_subnet_group.name
+  publicly_accessible                 = false
+  db_subnet_group_name                = aws_db_subnet_group.private_subnet_group.name
   iam_database_authentication_enabled = true
-  # vpc_security_group_ids              = [aws_security_group.rds_sg.id]  # TODO
+  vpc_security_group_ids              = [aws_security_group.rds_sg.id]
 
   deletion_protection        = true
   apply_immediately          = true
@@ -80,33 +80,34 @@ resource "random_string" "rds_db_user_password_prefix" {
 }
 
 
-# # ---------------------------------
-# # RDS Security Group
-# # ---------------------------------
+# ---------------------------------
+# RDS Security Group
+# ---------------------------------
 
-# resource "aws_security_group" "rds_sg" {
-#   name        = "hydroserver-${var.instance}-rds-sg"
-#   vpc_id      = aws_vpc.rds_vpc.id
+resource "aws_security_group" "rds_sg" {
+  name        = "hydroserver-${var.instance}-rds-sg"
+  vpc_id      = aws_vpc.vpc.id
 
-#   ingress {
-#     from_port       = 5432
-#     to_port         = 5432
-#     protocol        = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]  # TODO remove
-#     # security_groups = [aws_security_group.app_runner_sg.id]
-#   }
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    cidr_blocks     = ["10.0.0.0/16"]
+    # cidr_blocks     = ["0.0.0.0/0"]  # TODO remove
+    # security_groups = [aws_security_group.app_runner_sg.id]
+  }
 
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-#   tags = {
-#     "${var.tag_key}" = local.tag_value
-#   }
-# }
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
 
 
 # ---------------------------------
@@ -146,17 +147,14 @@ resource "aws_iam_role_policy_attachment" "enhanced_monitoring_role_attachment" 
 # AWS Secrets Manager
 # ---------------------------------
 
-resource "aws_secretsmanager_secret" "rds_database_url" {
-  name = "hydroserver-${var.instance}-database-url"
+resource "aws_ssm_parameter" "database_url" {
+  name        = "/hydroserver-${var.instance}-api/database-url"
+  type        = "SecureString"
+  value       = var.database_url != "" ? var.database_url : "postgresql://${aws_db_instance.rds_db_instance[0].username}:${random_string.rds_db_user_password_prefix[0].result}${random_password.rds_db_user_password[0].result}@${aws_db_instance.rds_db_instance[0].endpoint}/hydroserver?sslmode=require"
 
   tags = {
     "${var.tag_key}" = local.tag_value
   }
-}
-
-resource "aws_secretsmanager_secret_version" "rds_database_url_version" {
-  secret_id     = aws_secretsmanager_secret.rds_database_url.id
-  secret_string = var.database_url != "" ? var.database_url : "postgresql://${aws_db_instance.rds_db_instance[0].username}:${random_string.rds_db_user_password_prefix[0].result}${random_password.rds_db_user_password[0].result}@${aws_db_instance.rds_db_instance[0].endpoint}/hydroserver?sslmode=require"
 }
 
 resource "random_password" "api_secret_key" {
@@ -168,15 +166,12 @@ resource "random_password" "api_secret_key" {
   override_special = "!@#$%^&*()-_=+{}[]|:;\"'<>,.?/"
 }
 
-resource "aws_secretsmanager_secret" "api_secret_key" {
-  name = "hydroserver-${var.instance}-api-secret-key"
+resource "aws_ssm_parameter" "secret_key" {
+  name        = "/hydroserver-${var.instance}-api/secret-key"
+  type        = "SecureString"
+  value       = random_password.api_secret_key.result
 
   tags = {
     "${var.tag_key}" = local.tag_value
   }
-}
-
-resource "aws_secretsmanager_secret_version" "api_secret_key_version" {
-  secret_id     = aws_secretsmanager_secret.api_secret_key.id
-  secret_string = random_password.api_secret_key.result
 }

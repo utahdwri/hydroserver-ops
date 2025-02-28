@@ -17,20 +17,30 @@ resource "aws_apprunner_service" "api" {
 
   source_configuration {
     image_repository {
-      image_identifier = "${aws_ecr_repository.api_repository.repository_url}:latest"
+      image_identifier      = "${aws_ecr_repository.api_repository.repository_url}:latest"
       image_repository_type = "ECR"
       image_configuration {
         port = "8000"
         runtime_environment_secrets = {
-          DATABASE_URL         = aws_secretsmanager_secret.rds_database_url.arn
-          SECRET_KEY           = aws_secretsmanager_secret.api_secret_key.arn
+          DATABASE_URL               = aws_ssm_parameter.database_url.arn
+          SMTP_URL                   = aws_ssm_parameter.smtp_url.arn
+          SECRET_KEY                 = aws_ssm_parameter.secret_key.arn
+          AWS_CLOUDFRONT_KEY_ID      = aws_ssm_parameter.signing_key_id.arn
+          AWS_CLOUDFRONT_KEY         = aws_ssm_parameter.signing_key.arn
+          PROXY_BASE_URL             = aws_ssm_parameter.proxy_base_url.arn
+          DEBUG                      = aws_ssm_parameter.debug_mode.arn
+          DEFAULT_SUPERUSER_EMAIL    = aws_ssm_parameter.admin_email.arn
+          DEFAULT_SUPERUSER_PASSWORD = aws_ssm_parameter.admin_password.arn
+          DEFAULT_FROM_EMAIL         = aws_ssm_parameter.default_from_email.arn
+          ACCOUNT_SIGNUP_ENABLED     = aws_ssm_parameter.account_signup_enabled.arn
+          ACCOUNT_OWNERSHIP_ENABLED  = aws_ssm_parameter.account_ownership_enabled.arn
+          SOCIALACCOUNT_SIGNUP_ONLY  = aws_ssm_parameter.socialaccount_signup_only.arn
         }
         runtime_environment_variables = {
-          DEPLOYED             = "True"
-          DEPLOYMENT_BACKEND   = "aws"
-          PROXY_BASE_URL       = "https://www.example.com"
-          STATIC_BUCKET_NAME   = aws_s3_bucket.static_bucket.bucket
-          MEDIA_BUCKET_NAME    = aws_s3_bucket.media_bucket.bucket
+          DEPLOYED                   = "True"
+          DEPLOYMENT_BACKEND         = "aws"
+          STATIC_BUCKET_NAME         = aws_s3_bucket.static_bucket.bucket
+          MEDIA_BUCKET_NAME          = aws_s3_bucket.media_bucket.bucket
         }
       }
     }
@@ -49,12 +59,15 @@ resource "aws_apprunner_service" "api" {
     unhealthy_threshold = 2
   }
 
-  # network_configuration {
-  #   egress_configuration {
-  #     egress_type = "VPC"
-  #     vpc_connector_arn = aws_apprunner_vpc_connector.rds_connector.arn
-  #   }
-  # }
+  network_configuration {
+    egress_configuration {
+      egress_type = "VPC"
+      vpc_connector_arn = aws_apprunner_vpc_connector.vpc_connector.arn
+    }
+    ingress_configuration {
+      is_publicly_accessible = true
+    }
+  }
 
   tags = {
     "${var.tag_key}" = local.tag_value
@@ -69,52 +82,65 @@ resource "null_resource" "db_wait" {
   }
 }
 
-# TODO AWS indicates this setup should allow App Runner to be reachable while RDS is not, but it isn't working. App Runner is unreachable with VPC connector attached.
 
-# # ---------------------------------
-# # App Runner Security Group
-# # ---------------------------------
+# ---------------------------------
+# App Runner Security Group
+# ---------------------------------
 
-# resource "aws_security_group" "app_runner_sg" {
-#   name        = "hydroserver-${var.instance}-app-runner-sg"
-#   vpc_id      = aws_vpc.rds_vpc.id
+resource "aws_security_group" "app_runner_sg" {
+  name        = "hydroserver-${var.instance}-app-runner-sg"
+  vpc_id      = aws_vpc.vpc.id
 
-#   ingress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-#   tags = {
-#     "${var.tag_key}" = local.tag_value
-#   }
-# }
+  ingress {
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
 
 
-# # ---------------------------------
-# # App Runner VPC Connector for RDS
-# # ---------------------------------
+# ---------------------------------
+# App Runner VPC Connector for RDS
+# ---------------------------------
 
-# resource "aws_apprunner_vpc_connector" "rds_connector" {
-#   vpc_connector_name = "hydroserver-${var.instance}"
-#   security_groups = [aws_security_group.app_runner_sg.id]
-#   subnets = [
-#     aws_subnet.rds_subnet_a.id,
-#     aws_subnet.rds_subnet_b.id
-#   ]
+resource "aws_apprunner_vpc_connector" "vpc_connector" {
+  vpc_connector_name = "hydroserver-${var.instance}"
+  security_groups = [aws_security_group.app_runner_sg.id]
+  subnets = [
+    aws_subnet.private_subnet_az1.id,
+    aws_subnet.private_subnet_az2.id
+  ]
 
-#   tags = {
-#     "${var.tag_key}" = local.tag_value
-#   }
-# }
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
 
 
 # ---------------------------------
@@ -161,27 +187,28 @@ resource "aws_iam_policy_attachment" "app_runner_rds_policy_attachment" {
   roles      = [aws_iam_role.app_runner_service_role.name]
 }
 
-resource "aws_iam_policy" "app_runner_secrets_policy" {
-  name  = "hydroserver-${var.instance}-app-runner-secrets-access-policy"
+resource "aws_iam_policy" "app_runner_ssm_policy" {
+  name = "hydroserver-${var.instance}-app-runner-ssm-access-policy"
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
         Effect   = "Allow"
-        Action   = "secretsmanager:GetSecretValue"
-        Resource = [
-          aws_secretsmanager_secret.rds_database_url.arn,
-          aws_secretsmanager_secret.api_secret_key.arn
+        Action   = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParameterHistory"
         ]
+        Resource = "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/hydroserver-${var.instance}-api/*"
       }
     ]
   })
 }
 
-resource "aws_iam_policy_attachment" "app_runner_secrets_policy_attachment" {
-  name       = "hydroserver-${var.instance}-app-runner-secrets-access-policy-attachment"
-  policy_arn = aws_iam_policy.app_runner_secrets_policy.arn
+resource "aws_iam_policy_attachment" "app_runner_ssm_policy_attachment" {
+  name       = "hydroserver-${var.instance}-app-runner-ssm-access-policy-attachment"
+  policy_arn = aws_iam_policy.app_runner_ssm_policy.arn
   roles      = [aws_iam_role.app_runner_service_role.name]
 }
 
@@ -271,4 +298,151 @@ resource "aws_iam_policy_attachment" "app_runner_ecr_access_policy_attachment" {
   name       = "hydroserver-${var.instance}-app-runner-ecr-access-policy-attachment"
   policy_arn = aws_iam_policy.app_runner_ecr_access_policy.arn
   roles      = [aws_iam_role.app_runner_access_role.name]
+}
+
+
+# ---------------------------------
+# Default Admin Credentials
+# ---------------------------------
+
+resource "random_password" "admin_password" {
+  length      = 20
+  lower       = true
+  min_lower   = 1
+  upper       = true
+  min_upper   = 1
+  numeric     = true
+  min_numeric = 1
+  special     = true
+  min_special = 1
+}
+
+resource "aws_ssm_parameter" "admin_email" {
+  name      = "/hydroserver-${var.instance}-api/default-admin-email"
+  type      = "SecureString"
+  value     = local.admin_email
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
+resource "aws_ssm_parameter" "admin_password" {
+  name      = "/hydroserver-${var.instance}-api/default-admin-password"
+  type      = "SecureString"
+  value     = random_password.admin_password.result
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
+# ---------------------------------
+# App Runner Environment Variables
+# ---------------------------------
+
+resource "aws_ssm_parameter" "smtp_url" {
+  name        = "/hydroserver-${var.instance}-api/smtp-url"
+  type        = "SecureString"
+  value       = "smtp://127.0.0.1:1025"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
+resource "aws_ssm_parameter" "proxy_base_url" {
+  name        = "/hydroserver-${var.instance}-api/proxy-base-url"
+  type        = "String"
+  value       = var.proxy_base_url
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
+resource "aws_ssm_parameter" "default_from_email" {
+  name        = "/hydroserver-${var.instance}-api/default-from-email"
+  type        = "String"
+  value       = local.accounts_email
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
+resource "aws_ssm_parameter" "account_signup_enabled" {
+  name        = "/hydroserver-${var.instance}-api/account-signup-enabled"
+  type        = "String"
+  value       = "True"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
+resource "aws_ssm_parameter" "account_ownership_enabled" {
+  name        = "/hydroserver-${var.instance}-api/account-ownership-enabled"
+  type        = "String"
+  value       = "True"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
+resource "aws_ssm_parameter" "socialaccount_signup_only" {
+  name        = "/hydroserver-${var.instance}-api/socialaccount-signup-only"
+  type        = "String"
+  value       = "False"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+}
+
+resource "aws_ssm_parameter" "debug_mode" {
+  name        = "/hydroserver-${var.instance}-api/debug-mode"
+  type        = "String"
+  value       = "True"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
 }

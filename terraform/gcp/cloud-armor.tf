@@ -1,9 +1,9 @@
-# -------------------------------------------------- #
-# Cloud Armor Security Policy                        #
-# -------------------------------------------------- #
+# ---------------------------------
+# Cloud Armor Security Policy
+# ---------------------------------
 
-resource "google_compute_security_policy" "hydroserver_security_policy" {
-  name        = "hydroserver-security-policy-${var.instance}"
+resource "google_compute_security_policy" "security_policy" {
+  name        = "hydroserver-${var.instance}-security-policy"
   description = "WAF policy for HydroServer Load Balancer"
 
   adaptive_protection_config {
@@ -50,12 +50,6 @@ variable "cloud_armor_rules" {
   default = [
     {
       action      = "deny(403)"
-      priority    = 1000
-      description = "Block SQL Injection Attempts"
-      expression  = "evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 2})"
-    },
-    {
-      action      = "deny(403)"
       priority    = 1001
       description = "Prevent XSS Attacks"
       expression  = "evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 2})"
@@ -95,12 +89,6 @@ variable "cloud_armor_rules" {
       priority    = 1007
       description = "Log4j Vulnerability"
       expression  = "evaluatePreconfiguredWaf('cve-canary', {'sensitivity': 2})"
-    },
-    {
-      action      = "deny(403)"
-      priority    = 1008
-      description = "Block JSON SQL Injection Attempts"
-      expression  = "evaluatePreconfiguredWaf('json-sqli-canary', {'sensitivity': 2})"
     },
   ]
 }
