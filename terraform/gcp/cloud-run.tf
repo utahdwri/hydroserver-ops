@@ -205,7 +205,7 @@ resource "google_cloud_run_service_iam_member" "public_access" {
   location = google_cloud_run_v2_service.api.location
   service  = google_cloud_run_v2_service.api.name
   role     = "roles/run.invoker"
-  member   = "allUsers"
+  member   = "allAuthenticatedUsers"
 }
 
 resource "google_project_iam_member" "cloud_run_sql_access" {
