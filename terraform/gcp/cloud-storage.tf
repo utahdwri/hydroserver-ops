@@ -14,11 +14,11 @@ resource "google_storage_bucket" "static_bucket" {
   }
 }
 
-resource "google_storage_bucket_iam_member" "static_bucket_public_access" {
-  bucket = google_storage_bucket.static_bucket.name
-  role   = "roles/storage.objectViewer"
-  member = "projectOwner:${var.project_id}"
-}
+# resource "google_storage_bucket_iam_member" "static_bucket_public_access" {
+#   bucket = google_storage_bucket.static_bucket.name
+#   role   = "roles/storage.objectViewer"
+#   member = "allUsers"
+# }
 
 
 # ---------------------------------
@@ -37,11 +37,11 @@ resource "google_storage_bucket" "media_bucket" {
   }
 }
 
-resource "google_storage_bucket_iam_member" "media_bucket_public_access" {
-  bucket = google_storage_bucket.media_bucket.name
-  role   = "roles/storage.objectViewer"
-  member = "projectOwner:${var.project_id}"
-}
+# resource "google_storage_bucket_iam_member" "media_bucket_public_access" {
+#   bucket = google_storage_bucket.media_bucket.name
+#   role   = "roles/storage.objectViewer"
+#   member = "allUsers"
+# }
 
 
 # ---------------------------------
@@ -65,11 +65,11 @@ resource "google_storage_bucket" "data_mgmt_app_bucket" {
   }
 }
 
-resource "google_storage_bucket_iam_member" "data_mgmt_app_bucket_public_access" {
-  bucket = google_storage_bucket.data_mgmt_app_bucket.name
-  role   = "roles/storage.objectViewer"
-  member = "projectOwner:${var.project_id}"
-}
+# resource "google_storage_bucket_iam_member" "data_mgmt_app_bucket_public_access" {
+#   bucket = google_storage_bucket.data_mgmt_app_bucket.name
+#   role   = "roles/storage.objectViewer"
+#   member = "allUsers"
+# }
 
 resource "google_storage_bucket_object" "data_mgmt_app_default_index" {
   name   = "index.html"
