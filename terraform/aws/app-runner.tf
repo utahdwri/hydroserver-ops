@@ -10,8 +10,12 @@ resource "aws_apprunner_service" "api" {
     aws_s3_bucket.media_bucket,
     null_resource.db_wait
   ]
+
+  auto_scaling_configuration_arn = aws_apprunner_auto_scaling_configuration_version.scaling.arn
   
   instance_configuration {
+    cpu    = "1 vCPU"
+    memory = "2 GB"
     instance_role_arn = aws_iam_role.app_runner_service_role.arn
   }
 
@@ -71,6 +75,31 @@ resource "aws_apprunner_service" "api" {
 
   tags = {
     "${var.tag_key}" = local.tag_value
+  }
+
+  lifecycle {
+    ignore_changes = [
+      "instance_configuration.0.cpu",
+      "instance_configuration.0.memory"
+    ]
+  }
+}
+
+resource "aws_apprunner_auto_scaling_configuration_version" "scaling" {
+  auto_scaling_configuration_name = "hydroserver-api-${var.instance}-auto-scaling"
+
+  max_size = 1
+  min_size = 1
+
+  tags = {
+    "${var.tag_key}" = local.tag_value
+  }
+
+  lifecycle {
+    ignore_changes = [
+      min_size,
+      max_size
+    ]
   }
 }
 
