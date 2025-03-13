@@ -79,8 +79,8 @@ resource "aws_apprunner_service" "api" {
 
   lifecycle {
     ignore_changes = [
-      instance_configuration[0].cpu",
-      instance_configuration[0].memory"
+      instance_configuration[0].cpu,
+      instance_configuration[0].memory
     ]
   }
 }
