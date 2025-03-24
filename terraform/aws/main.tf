@@ -13,6 +13,11 @@ provider "aws" {
   region = var.region
 }
 
+provider "aws" {
+  region = "us-east-1"
+  alias  = "useast1"
+}
+
 variable "instance" {
   description = "The name of this HydroServer instance."
   type        = string
