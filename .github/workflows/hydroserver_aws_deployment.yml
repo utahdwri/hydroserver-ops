@@ -242,7 +242,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: hydroserver2/hydroserver-data-management-app
-          ref: 238-workspaces
+          ref: 236-data-source-form
           path: data_mgmt
       - name: Setup Node 18.x
         uses: actions/setup-node@v3
