@@ -20,7 +20,8 @@ resource "google_cloud_run_v2_service" "api" {
 
       resources {
         limits = {
-          memory = "512Mi"
+          cpu    = "1"
+          memory = "2Gi"
         }
       }
 
@@ -85,9 +86,21 @@ resource "google_cloud_run_v2_service" "api" {
       }
     }
 
+    scaling {
+      min_instance_count = 1
+      max_instance_count = 1
+    }
+
     labels = {
       "${var.label_key}" = local.label_value
     }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      "template.0.containers.0.resources",
+      "template.0.scaling"
+    ]
   }
 }
 

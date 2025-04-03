@@ -244,6 +244,7 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 resource "aws_wafv2_web_acl" "core_rules" {
   name        = "CoreRulesWebACL-${var.instance}"
   scope       = "CLOUDFRONT"
+  provider    = aws.useast1
   description = "WAF web ACL with Core Rules"
 
   default_action {

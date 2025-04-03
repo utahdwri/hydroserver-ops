@@ -43,6 +43,7 @@ resource "aws_db_instance" "rds_db_instance" {
 
   lifecycle {
     ignore_changes = [
+      engine_version,
       instance_class,
       storage_type,
       allocated_storage,
