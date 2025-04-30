@@ -86,7 +86,7 @@ resource "aws_apprunner_service" "api" {
 }
 
 resource "aws_apprunner_auto_scaling_configuration_version" "scaling" {
-  auto_scaling_configuration_name = "hydroserver-api-${var.instance}-auto-scaling"
+  auto_scaling_configuration_name = "hydroserver-${var.instance}"
 
   max_size = 1
   min_size = 1
