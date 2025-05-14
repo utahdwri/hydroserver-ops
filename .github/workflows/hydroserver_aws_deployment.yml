@@ -161,10 +161,10 @@ jobs:
           aws ecr get-login-password --region ${{ vars.AWS_REGION }} | docker login --username AWS --password-stdin "${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com"
       - name: Pull image from GHCR
         run: |
-          docker pull ghcr.io/hydroserver2/hydroserver-api-services:latest
+          docker pull ghcr.io/hydroserver2/hydroserver-api-services:${{ github.event.inputs.release }}
       - name: Tag Docker Image for ECR
         run: |
-          docker tag ghcr.io/hydroserver2/hydroserver-api-services:latest \
+          docker tag ghcr.io/hydroserver2/hydroserver-api-services:${{ github.event.inputs.release }} \
           ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-api-${{ github.event.inputs.environment }}:latest
       - name: Push Docker Image to AWS ECR
         run: |
