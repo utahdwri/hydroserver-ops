@@ -52,25 +52,25 @@ variable "cloud_armor_rules" {
       action      = "deny(403)"
       priority    = 1001
       description = "Prevent SQL Injection"
-      expression  = "evaluatePreconfiguredWaf('owasp-crs-v030001', ['crs-30-sqli'], {'sensitivity': 1})"
+      expression  = "evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})"
     },
     {
       action      = "deny(403)"
       priority    = 1002
       description = "Prevent Cross-Site Scripting (XSS)"
-      expression  = "evaluatePreconfiguredWaf('owasp-crs-v030001', ['crs-30-xss'], {'sensitivity': 1})"
+      expression  = "evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 1})"
     },
     {
       action      = "deny(403)"
       priority    = 1003
       description = "Prevent Local File Inclusion (LFI)"
-      expression  = "evaluatePreconfiguredWaf('owasp-crs-v030001', ['crs-30-lfi'], {'sensitivity': 1})"
+      expression  = "evaluatePreconfiguredWaf('lfi-v33-stable', {'sensitivity': 1})"
     },
     {
       action      = "deny(403)"
       priority    = 1004
       description = "Prevent Protocol Violations"
-      expression  = "evaluatePreconfiguredWaf('owasp-crs-v030001', ['crs-30-protocol-violations'], {'sensitivity': 1})"
+      expression  = "evaluatePreconfiguredWaf('protocolattack-v33-stable', {'sensitivity': 1})"
     }
   ]
 }
