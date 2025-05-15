@@ -51,44 +51,26 @@ variable "cloud_armor_rules" {
     {
       action      = "deny(403)"
       priority    = 1001
-      description = "Prevent XSS Attacks"
-      expression  = "evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 2})"
+      description = "Prevent SQL Injection"
+      expression  = "evaluatePreconfiguredWaf('owasp-crs-v030001', ['crs-30-sqli'], {'sensitivity': 1})"
     },
     {
       action      = "deny(403)"
       priority    = 1002
-      description = "Block Local File Inclusion"
-      expression  = "evaluatePreconfiguredWaf('lfi-v33-stable', {'sensitivity': 2})"
+      description = "Prevent Cross-Site Scripting (XSS)"
+      expression  = "evaluatePreconfiguredWaf('owasp-crs-v030001', ['crs-30-xss'], {'sensitivity': 1})"
     },
     {
       action      = "deny(403)"
       priority    = 1003
-      description = "Block Remote File Inclusion"
-      expression  = "evaluatePreconfiguredWaf('rfi-v33-stable', {'sensitivity': 2})"
+      description = "Prevent Local File Inclusion (LFI)"
+      expression  = "evaluatePreconfiguredWaf('owasp-crs-v030001', ['crs-30-lfi'], {'sensitivity': 1})"
     },
     {
       action      = "deny(403)"
       priority    = 1004
-      description = "Perform Scanner Detection"
-      expression  = "evaluatePreconfiguredWaf('scannerdetection-v33-stable', {'sensitivity': 2})"
-    },
-    {
-      action      = "deny(403)"
-      priority    = 1005
-      description = "Prevent Protocol Attacks"
-      expression  = "evaluatePreconfiguredWaf('protocolattack-v33-stable', {'sensitivity': 2})"
-    },
-    {
-      action      = "deny(403)"
-      priority    = 1006
-      description = "Prevent Session Fixation Attacks"
-      expression  = "evaluatePreconfiguredWaf('sessionfixation-v33-stable', {'sensitivity': 2})"
-    },
-    {
-      action      = "deny(403)"
-      priority    = 1007
-      description = "Log4j Vulnerability"
-      expression  = "evaluatePreconfiguredWaf('cve-canary', {'sensitivity': 2})"
-    },
+      description = "Prevent Protocol Violations"
+      expression  = "evaluatePreconfiguredWaf('owasp-crs-v030001', ['crs-30-protocol-violations'], {'sensitivity': 1})"
+    }
   ]
 }
