@@ -257,39 +257,9 @@ resource "aws_wafv2_web_acl" "core_rules" {
     sampled_requests_enabled   = true
   }
 
-  custom_response_body {
-    key = "RateLimit429Response"
-    content_type = "APPLICATION_JSON"
-    content      = jsonencode({ message = "Too many requests." })
-  }
-
-  rule {
-    name     = "RateLimit10PerSecond"
-    priority = 0
-    action {
-      block {
-        custom_response {
-          response_code = 429
-          custom_response_body_key = "RateLimit429Response"
-        }
-      }
-    }
-    statement {
-      rate_based_statement {
-        limit              = 3000
-        aggregate_key_type = "IP"
-      }
-    }
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "RateLimit10PerSecond"
-      sampled_requests_enabled   = true
-    }
-  }
-
   rule {
     name     = "AWS-AWSManagedRulesCommonRuleSet"
-    priority = 1
+    priority = 0
     override_action {
       none {
       }
