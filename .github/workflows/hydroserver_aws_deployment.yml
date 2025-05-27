@@ -232,11 +232,19 @@ jobs:
       - name: Get Latest HydroServer Version
         id: get_latest_tag
         run: echo "tag=$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-data-management-app/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
+      - name: Resolve Tag to Checkout
+        id: resolve_ref
+        run: |
+          if [ -z "${{ github.event.inputs.release }}" ] || [ "${{ github.event.inputs.release }}" = "latest" ]; then
+            echo "ref=${{ steps.get_latest_tag.outputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${{ github.event.inputs.release }}" >> $GITHUB_OUTPUT
+          fi
       - name: Checkout Data Management App Repo
         uses: actions/checkout@v4
         with:
           repository: hydroserver2/hydroserver-data-management-app
-          ref: refs/tags/${{ github.event.inputs.release || steps.get_latest_tag.outputs.tag }}
+          ref: ${{ steps.resolve_ref.outputs.ref }}
           path: data_mgmt
       - name: Setup Node 18.x
         uses: actions/setup-node@v3
