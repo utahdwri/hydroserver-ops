@@ -8,8 +8,8 @@ resource "aws_instance" "bastion" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t2.micro"
   subnet_id                   = aws_subnet.private_subnet_az1.id
-  vpc_security_group_ids      = [aws_security_group.bastion_sg.id]
-  iam_instance_profile        = aws_iam_instance_profile.bastion_profile.name
+  vpc_security_group_ids      = [aws_security_group.bastion_sg[0].id]
+  iam_instance_profile        = aws_iam_instance_profile.bastion_profile[0].name
   associate_public_ip_address = false
 
   tags = {
@@ -19,8 +19,6 @@ resource "aws_instance" "bastion" {
 }
 
 data "aws_ami" "amazon_linux" {
-  count = var.database_url == "" ? 1 : 0
-
   most_recent = true
   owners      = ["amazon"]
 
@@ -100,7 +98,7 @@ resource "aws_iam_role_policy_attachment" "ssm_core" {
   name       = "hydroserver-${var.instance}-bastion-ssm-policy-attachment"
   count = var.database_url == "" ? 1 : 0
 
-  role       = aws_iam_role.bastion_role.name
+  role       = aws_iam_role.bastion_role[0].name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
@@ -109,12 +107,12 @@ resource "aws_iam_policy_attachment" "bastion_rds_policy_attachment" {
   count      = var.database_url == "" ? 1 : 0
 
   policy_arn = aws_iam_policy.bastion_rds_policy[0].arn
-  roles      = [aws_iam_role.bastion_role.name]
+  roles      = [aws_iam_role.bastion_role[0].name]
 }
 
 resource "aws_iam_instance_profile" "bastion_profile" {
   name = "hydroserver-${var.instance}-bastion-ssm-profile"
   count = var.database_url == "" ? 1 : 0
 
-  roles = [aws_iam_role.bastion_role.name]
+  roles = [aws_iam_role.bastion_role[0].name]
 }
