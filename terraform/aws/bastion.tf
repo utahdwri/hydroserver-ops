@@ -95,7 +95,6 @@ resource "aws_iam_policy" "bastion_rds_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "ssm_core" {
-  name       = "hydroserver-${var.instance}-bastion-ssm-policy-attachment"
   count = var.database_url == "" ? 1 : 0
 
   role       = aws_iam_role.bastion_role[0].name
@@ -114,5 +113,5 @@ resource "aws_iam_instance_profile" "bastion_profile" {
   name = "hydroserver-${var.instance}-bastion-ssm-profile"
   count = var.database_url == "" ? 1 : 0
 
-  roles = [aws_iam_role.bastion_role[0].name]
+  role = aws_iam_role.bastion_role[0].name
 }
