@@ -153,7 +153,9 @@ resource "aws_cloudfront_distribution" "url_map" {
   lifecycle {
     ignore_changes = [
       viewer_certificate,
-      aliases
+      aliases,
+      ordered_cache_behavior,
+      origin
     ]
   }
 
