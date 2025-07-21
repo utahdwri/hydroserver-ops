@@ -266,7 +266,7 @@ jobs:
       - name: Merge App Config
         working-directory: ./data_mgmt
         run: |
-          SOURCE="../config/data_mgmt/${{ github.event.inputs.environment }}"
+          SOURCE="${{ github.workspace }}/config/data_mgmt/${{ github.event.inputs.environment }}"
           TARGET="./config"
           if [ ! -d "$SOURCE" ]; then
             echo "No per-environment override directory found at $SOURCE"
