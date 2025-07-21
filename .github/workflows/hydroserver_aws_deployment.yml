@@ -279,7 +279,7 @@ jobs:
         working-directory: ./data_mgmt
         run: |
           SOURCE="${{ github.workspace }}/config/data_mgmt/${{ github.event.inputs.environment }}"
-          TARGET="./config"
+          TARGET="./src/config"
           if [ ! -d "$SOURCE" ]; then
             echo "No per-environment override directory found at $SOURCE"
           elif [ -z "$(ls -A "$SOURCE")" ]; then
