@@ -240,6 +240,10 @@ jobs:
           else
             echo "ref=${{ github.event.inputs.release }}" >> $GITHUB_OUTPUT
           fi
+      - name: Checkout Ops Repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Checkout Data Management App Repo
         uses: actions/checkout@v4
         with:
