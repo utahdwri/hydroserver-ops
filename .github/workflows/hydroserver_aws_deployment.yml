@@ -250,13 +250,6 @@ jobs:
           repository: hydroserver2/hydroserver-data-management-app
           ref: ${{ steps.resolve_ref.outputs.ref }}
           path: data_mgmt
-
-      - name: Debug repo root contents
-        run: |
-          echo "Current working directory: $(pwd)"
-          echo "Listing root directory:"
-          ls -la
-          
       - name: Setup Node 18.x
         uses: actions/setup-node@v3
         with:
@@ -274,6 +267,14 @@ jobs:
           VITE_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
           VITE_APP_GOOGLE_MAPS_MAP_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
           VITE_APP_PROXY_BASE_URL=${{ vars.PROXY_BASE_URL }}
+
+      - name: Debug repo root contents
+        working-directory: ./data_mgmt
+        run: |
+          echo "Current working directory: $(pwd)"
+          echo "Listing root directory:"
+          ls -la
+          
       - name: Merge App Config
         working-directory: ./data_mgmt
         run: |
