@@ -246,6 +246,13 @@ jobs:
           repository: hydroserver2/hydroserver-data-management-app
           ref: ${{ steps.resolve_ref.outputs.ref }}
           path: data_mgmt
+
+      - name: Debug repo root contents
+        run: |
+          echo "Current working directory: $(pwd)"
+          echo "Listing root directory:"
+          ls -la
+          
       - name: Setup Node 18.x
         uses: actions/setup-node@v3
         with:
