@@ -263,6 +263,19 @@ jobs:
           VITE_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
           VITE_APP_GOOGLE_MAPS_MAP_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
           VITE_APP_PROXY_BASE_URL=${{ vars.PROXY_BASE_URL }}
+      - name: Merge App Config
+        working-directory: ./data_mgmt
+        run: |
+          SOURCE="../../config/data_mgmt/${{ github.event.inputs.environment }}"
+          TARGET="./config"
+          if [ ! -d "$SOURCE" ]; then
+            echo "No per-environment override directory found at $SOURCE"
+          elif [ -z "$(ls -A "$SOURCE")" ]; then
+            echo "Override directory exists but is empty: $SOURCE"
+          else
+            echo "Copying overrides from $SOURCE to $TARGET"
+            cp -r "$SOURCE/"* "$TARGET/"
+          fi
       - name: Build Data Management App
         working-directory: ./data_mgmt
         run: npm run build
