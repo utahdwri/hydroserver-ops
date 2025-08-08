@@ -165,10 +165,10 @@ jobs:
       - name: Tag Docker Image for ECR
         run: |
           docker tag ghcr.io/hydroserver2/hydroserver-api-services:${{ github.event.inputs.release }} \
-          ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-api-${{ github.event.inputs.environment }}:latest
+          ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-${{ github.event.inputs.environment }}:latest
       - name: Push Docker Image to AWS ECR
         run: |
-          docker push ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-api-${{ github.event.inputs.environment }}:latest
+          docker push ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-${{ github.event.inputs.environment }}:latest
       - name: Update AWS SSM Parameters
         run: |
           ENVIRONMENT="${{ github.event.inputs.environment }}"
@@ -273,3 +273,4 @@ jobs:
           -var "region=${{ vars.AWS_REGION }}" \
           -var "proxy_base_url=${{ vars.PROXY_BASE_URL }}" \
           -var "acm_certificate_arn=${{ vars.AWS_ACM_CERTIFICATE_ARN }}"
+
