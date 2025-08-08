@@ -113,10 +113,10 @@ jobs:
       - name: Tag Docker Image for ECR
         run: |
           docker tag ghcr.io/hydroserver2/hydroserver-api-services:latest \
-          ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-api-${{ github.event.inputs.environment }}:latest
+          ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-${{ github.event.inputs.environment }}:latest
       - name: Push Docker Image to AWS ECR
         run: |
-          docker push ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-api-${{ github.event.inputs.environment }}:latest
+          docker push ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/hydroserver-${{ github.event.inputs.environment }}:latest
       - name: Terraform Apply
         run: |
           terraform apply \
