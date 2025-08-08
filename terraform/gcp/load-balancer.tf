@@ -3,14 +3,14 @@
 # ---------------------------------
 
 resource "google_compute_backend_service" "cloudrun_backend" {
-  name                  = "hydroserver-api-${var.instance}-backend"
+  name                  = "hydroserver-${var.instance}-backend"
   protocol              = "HTTP"
   load_balancing_scheme = "EXTERNAL_MANAGED"
   security_policy       = google_compute_security_policy.security_policy.id
   timeout_sec           = 30
 
   backend {
-    group = google_compute_region_network_endpoint_group.api_neg.id
+    group = google_compute_region_network_endpoint_group.hydroserver_neg.id
   }
 }
 
@@ -30,20 +30,14 @@ resource "google_compute_backend_bucket" "media_bucket_backend" {
   enable_cdn  = true
 }
 
-resource "google_compute_backend_bucket" "data_mgmt_bucket_backend" {
-  name       = "hydroserver-${var.instance}-data-mgmt-app-bucket"
-  bucket_name = google_storage_bucket.data_mgmt_app_bucket.name
-  enable_cdn  = true
-}
-
 
 # ---------------------------------
 # URL Map
 # ---------------------------------
 
 resource "google_compute_url_map" "url_map" {
-  name = "hydroserver-api-${var.instance}-url-map"
-  default_service = google_compute_backend_bucket.data_mgmt_bucket_backend.self_link
+  name = "hydroserver-${var.instance}-url-map"
+  default_service = google_compute_backend_service.cloudrun_backend.self_link
 
   host_rule {
     hosts        = ["*"]
@@ -52,12 +46,8 @@ resource "google_compute_url_map" "url_map" {
 
   path_matcher {
     name            = "allpaths"
-    default_service = google_compute_backend_bucket.data_mgmt_bucket_backend.self_link
+    default_service = google_compute_backend_service.cloudrun_backend.self_link
 
-    path_rule {
-      paths   = ["/api/*", "/admin/*", "/accounts/*"]
-      service = google_compute_backend_service.cloudrun_backend.self_link
-    }
     path_rule {
       paths   = ["/static/*"]
       service = google_compute_backend_bucket.static_bucket_backend.self_link
@@ -68,7 +58,7 @@ resource "google_compute_url_map" "url_map" {
     }
     path_rule {
       paths   = ["/*"]
-      service = google_compute_backend_bucket.data_mgmt_bucket_backend.self_link
+      service = google_compute_backend_service.cloudrun_backend.self_link
     }
   }
 }

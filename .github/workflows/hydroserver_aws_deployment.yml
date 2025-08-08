@@ -129,7 +129,7 @@ jobs:
           -var "tag_key=${{ vars.AWS_TAG_KEY || 'hydroserver-instance' }}" \
           -var "tag_value=${{ vars.AWS_TAG_VALUE || github.event.inputs.environment }}"
 
-  deploy-hydroserver-api:
+  deploy-hydroserver:
     needs: 
       - check-environment-variables
       - initialize-hydroserver

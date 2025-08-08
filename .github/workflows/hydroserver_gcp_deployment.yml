@@ -99,7 +99,7 @@ jobs:
         run: |
           terraform apply \
           -auto-approve -input=false \
-          -target=google_artifact_registry_repository.api_repository \
+          -target=google_artifact_registry_repository.hydroserver \
           -var "instance=${{ github.event.inputs.environment }}" \
           -var "region=${{ vars.GCP_REGION }}" \
           -var "project_id=${{ vars.GCP_PROJECT_ID }}" \
@@ -134,7 +134,7 @@ jobs:
           -var "label_key=${{ vars.GCP_LABEL_KEY || 'hydroserver-instance' }}" \
           -var "label_value=${{ vars.GCP_LABEL_VALUE || github.event.inputs.environment }}"
 
-  deploy-hydroserver-api:
+  deploy-hydroserver:
     needs: 
       - check-environment-variables
       - initialize-hydroserver
@@ -181,7 +181,15 @@ jobs:
       - name: Update Cloud Run Secrets
         run: |
           echo -n "${{ secrets.SMTP_URL }}" | gcloud secrets versions add "hydroserver-${{ github.event.inputs.environment }}-api-smtp-url" --data-file=-
-      - name: Update Cloud Run Service
+      - name: Run HydroServer Setup Commands
+        run: |
+          gcloud run jobs execute hydroserver-init-${{ env.INSTANCE }} \
+            --region ${{ env.REGION }} \
+            --command "sh" \
+            --args "-c", \
+              "python manage.py migrate && \
+               python manage.py collectstatic --noinput"
+      - name: Update Cloud Run Web Service
         run: |
           ENV_VARS=""
           [ -n "${{ vars.GCP_PROJECT_ID }}" ] && ENV_VARS+="GS_PROJECT_ID=${{ vars.GCP_PROJECT_ID }},"
