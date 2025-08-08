@@ -205,7 +205,7 @@ jobs:
           done
       - name: Deploy AWS App Runner Service
         run: |
-          APP_RUNNER_SERVICE_NAME="hydroserver-api-${{ github.event.inputs.environment }}"
+          APP_RUNNER_SERVICE_NAME="hydroserver-${{ github.event.inputs.environment }}"
           SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text)
           aws apprunner start-deployment --service-arn "$SERVICE_ARN"
       - name: Get CloudFront Distribution ID
@@ -273,4 +273,5 @@ jobs:
           -var "region=${{ vars.AWS_REGION }}" \
           -var "proxy_base_url=${{ vars.PROXY_BASE_URL }}" \
           -var "acm_certificate_arn=${{ vars.AWS_ACM_CERTIFICATE_ARN }}"
+
 
