@@ -61,7 +61,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod  # TODO
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -149,7 +149,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod  # TODO
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -238,7 +238,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod  # TODO
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
