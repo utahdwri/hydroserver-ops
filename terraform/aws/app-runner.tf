@@ -2,8 +2,8 @@
 # AWS App Runner Service
 # ---------------------------------
 
-resource "aws_apprunner_service" "api" {
-  service_name = "hydroserver-api-${var.instance}"
+resource "aws_apprunner_service" "hydroserver" {
+  service_name = "hydroserver-${var.instance}"
 
   depends_on = [
     aws_s3_bucket.static_bucket,
@@ -21,7 +21,7 @@ resource "aws_apprunner_service" "api" {
 
   source_configuration {
     image_repository {
-      image_identifier      = "${aws_ecr_repository.api_repository.repository_url}:latest"
+      image_identifier      = "${aws_ecr_repository.hydroserver.repository_url}:latest"
       image_repository_type = "ECR"
       image_configuration {
         port = "8000"
@@ -229,7 +229,7 @@ resource "aws_iam_policy" "app_runner_ssm_policy" {
           "ssm:GetParameters",
           "ssm:GetParameterHistory"
         ]
-        Resource = "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/hydroserver-${var.instance}-api/*"
+        Resource = "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/hydroserver-${var.instance}/*"
       }
     ]
   })
@@ -347,7 +347,7 @@ resource "random_password" "admin_password" {
 }
 
 resource "aws_ssm_parameter" "admin_email" {
-  name      = "/hydroserver-${var.instance}-api/default-admin-email"
+  name      = "/hydroserver-${var.instance}/default-admin-email"
   type      = "SecureString"
   value     = local.admin_email
 
@@ -361,7 +361,7 @@ resource "aws_ssm_parameter" "admin_email" {
 }
 
 resource "aws_ssm_parameter" "admin_password" {
-  name      = "/hydroserver-${var.instance}-api/default-admin-password"
+  name      = "/hydroserver-${var.instance}/default-admin-password"
   type      = "SecureString"
   value     = random_password.admin_password.result
 
@@ -379,7 +379,7 @@ resource "aws_ssm_parameter" "admin_password" {
 # ---------------------------------
 
 resource "aws_ssm_parameter" "smtp_url" {
-  name        = "/hydroserver-${var.instance}-api/smtp-url"
+  name        = "/hydroserver-${var.instance}/smtp-url"
   type        = "SecureString"
   value       = "smtp://127.0.0.1:1025"
 
@@ -393,7 +393,7 @@ resource "aws_ssm_parameter" "smtp_url" {
 }
 
 resource "aws_ssm_parameter" "proxy_base_url" {
-  name        = "/hydroserver-${var.instance}-api/proxy-base-url"
+  name        = "/hydroserver-${var.instance}/proxy-base-url"
   type        = "String"
   value       = var.proxy_base_url
 
@@ -407,7 +407,7 @@ resource "aws_ssm_parameter" "proxy_base_url" {
 }
 
 resource "aws_ssm_parameter" "default_from_email" {
-  name        = "/hydroserver-${var.instance}-api/default-from-email"
+  name        = "/hydroserver-${var.instance}/default-from-email"
   type        = "String"
   value       = local.accounts_email
 
@@ -421,7 +421,7 @@ resource "aws_ssm_parameter" "default_from_email" {
 }
 
 resource "aws_ssm_parameter" "account_signup_enabled" {
-  name        = "/hydroserver-${var.instance}-api/account-signup-enabled"
+  name        = "/hydroserver-${var.instance}/account-signup-enabled"
   type        = "String"
   value       = "True"
 
@@ -435,7 +435,7 @@ resource "aws_ssm_parameter" "account_signup_enabled" {
 }
 
 resource "aws_ssm_parameter" "account_ownership_enabled" {
-  name        = "/hydroserver-${var.instance}-api/account-ownership-enabled"
+  name        = "/hydroserver-${var.instance}/account-ownership-enabled"
   type        = "String"
   value       = "True"
 
@@ -449,7 +449,7 @@ resource "aws_ssm_parameter" "account_ownership_enabled" {
 }
 
 resource "aws_ssm_parameter" "socialaccount_signup_only" {
-  name        = "/hydroserver-${var.instance}-api/socialaccount-signup-only"
+  name        = "/hydroserver-${var.instance}/socialaccount-signup-only"
   type        = "String"
   value       = "False"
 
@@ -463,7 +463,7 @@ resource "aws_ssm_parameter" "socialaccount_signup_only" {
 }
 
 resource "aws_ssm_parameter" "debug_mode" {
-  name        = "/hydroserver-${var.instance}-api/debug-mode"
+  name        = "/hydroserver-${var.instance}/debug-mode"
   type        = "String"
   value       = "True"
 

@@ -2,8 +2,8 @@
 # Amazon ECR Repository
 # ---------------------------------
 
-resource "aws_ecr_repository" "api_repository" {
-  name         = "hydroserver-api-${var.instance}"
+resource "aws_ecr_repository" "hydroserver" {
+  name         = "hydroserver-${var.instance}"
   force_delete = true
 
   image_scanning_configuration {
