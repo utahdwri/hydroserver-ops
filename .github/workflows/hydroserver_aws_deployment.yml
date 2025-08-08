@@ -96,7 +96,7 @@ jobs:
         run: |
           terraform apply \
           -auto-approve -input=false \
-          -target=aws_ecr_repository.api_repository \
+          -target=aws_ecr_repository.hydroserver \
           -var "instance=${{ github.event.inputs.environment }}" \
           -var "region=${{ vars.AWS_REGION }}" \
           -var "proxy_base_url=${{ vars.PROXY_BASE_URL }}" \
