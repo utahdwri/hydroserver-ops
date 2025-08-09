@@ -239,9 +239,6 @@ resource "google_cloud_run_v2_job" "hydroserver_init" {
     }
   }
 
-  max_retries = 0
-  timeout     = "3600s"
-
   labels = {
     "${var.label_key}" = local.label_value
   }
