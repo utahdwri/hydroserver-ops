@@ -63,7 +63,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v2
         with:
@@ -154,7 +154,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v2
         with:
@@ -216,7 +216,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v2
         with:
