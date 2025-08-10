@@ -361,7 +361,7 @@ resource "aws_ssm_parameter" "admin_email" {
 }
 
 resource "aws_ssm_parameter" "admin_password" {
-  name      = "/hydroserver-${var.instance}/default-admin-password"
+  name      = "/hydroserver-${var.instance}-api/default-admin-password"
   type      = "SecureString"
   value     = random_password.admin_password.result
 
