@@ -147,7 +147,7 @@ resource "aws_iam_role_policy_attachment" "enhanced_monitoring_role_attachment" 
 # ---------------------------------
 
 resource "aws_ssm_parameter" "database_url" {
-  name        = "/hydroserver-${var.instance}/database-url"
+  name        = "/hydroserver-${var.instance}-api/database-url"
   type        = "SecureString"
   value       = var.database_url != "" ? var.database_url : "postgresql://${aws_db_instance.rds_db_instance[0].username}:${random_string.rds_db_user_password_prefix[0].result}${random_password.rds_db_user_password[0].result}@${aws_db_instance.rds_db_instance[0].endpoint}/hydroserver?sslmode=require"
 
@@ -166,7 +166,7 @@ resource "random_password" "api_secret_key" {
 }
 
 resource "aws_ssm_parameter" "secret_key" {
-  name        = "/hydroserver-${var.instance}/secret-key"
+  name        = "/hydroserver-${var.instance}-api/secret-key"
   type        = "SecureString"
   value       = random_password.api_secret_key.result
 

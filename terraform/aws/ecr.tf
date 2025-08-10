@@ -2,7 +2,7 @@
 # Amazon ECR Repository
 # ---------------------------------
 
-resource "aws_ecr_repository" "hydroserver" {
+resource "aws_ecr_repository" "api_repository" {
   name         = "hydroserver-${var.instance}"
   force_delete = true
 

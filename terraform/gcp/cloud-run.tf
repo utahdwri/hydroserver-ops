@@ -2,8 +2,8 @@
 # GCP Cloud Run Web Service
 # ---------------------------------
 
-resource "google_cloud_run_v2_service" "hydroserver_web" {
-  name                = "hydroserver-web-${var.instance}"
+resource "google_cloud_run_v2_service" "api" {
+  name                = "hydroserver-api-${var.instance}"
   location            = var.region
   ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
   deletion_protection = false
@@ -11,7 +11,7 @@ resource "google_cloud_run_v2_service" "hydroserver_web" {
   depends_on = [
     google_secret_manager_secret_version.database_url_version,
     google_secret_manager_secret_version.smtp_url_version,
-    google_secret_manager_secret_version.secret_key_version
+    google_secret_manager_secret_version.api_secret_key_version
   ]
 
   template {
@@ -42,7 +42,7 @@ resource "google_cloud_run_v2_service" "hydroserver_web" {
           DEFAULT_SUPERUSER_PASSWORD = google_secret_manager_secret.default_admin_password.id
           DATABASE_URL               = google_secret_manager_secret.database_url.id
           SMTP_URL                   = google_secret_manager_secret.smtp_url.id
-          SECRET_KEY                 = google_secret_manager_secret.secret_key.id
+          SECRET_KEY                 = google_secret_manager_secret.api_secret_key.id
         }
         content {
           name = env.key
@@ -106,18 +106,18 @@ resource "google_cloud_run_v2_service" "hydroserver_web" {
   }
 }
 
-resource "google_compute_region_network_endpoint_group" "hydroserver_neg" {
-  name                  = "hydroserver-${var.instance}-neg"
+resource "google_compute_region_network_endpoint_group" "api_neg" {
+  name                  = "hydroserver-api-${var.instance}-neg"
   region                = var.region
   network_endpoint_type = "SERVERLESS"
 
   cloud_run {
-    service = google_cloud_run_v2_service.hydroserver_web.name
+    service = google_cloud_run_v2_service.api.name
   }
 }
 
 resource "google_secret_manager_secret" "smtp_url" {
-  secret_id = "hydroserver-${var.instance}-smtp-url"
+  secret_id = "hydroserver-${var.instance}-api-smtp-url"
   replication {
     user_managed {
       replicas {
@@ -200,7 +200,7 @@ resource "google_cloud_run_v2_job" "hydroserver_init" {
           name = "SECRET_KEY"
           value_source {
             secret_key_ref {
-              secret  = google_secret_manager_secret.secret_key.id
+              secret  = google_secret_manager_secret.api_secret_key.id
               version = "latest"
             }
           }
@@ -315,14 +315,14 @@ resource "google_secret_manager_secret_version" "default_admin_password_version"
 # ---------------------------------
 
 resource "google_service_account" "cloud_run_service_account" {
-  account_id   = "hydroserver-${var.instance}"
+  account_id   = "hydroserver-api-${var.instance}"
   display_name = "HydroServer Cloud Run Service Account - ${var.instance}"
   project      = data.google_project.gcp_project.project_id
 }
 
 resource "google_cloud_run_service_iam_member" "public_access" {
-  location = google_cloud_run_v2_service.hydroserver_web.location
-  service  = google_cloud_run_v2_service.hydroserver_web.name
+  location = google_cloud_run_v2_service.api.location
+  service  = google_cloud_run_v2_service.api.name
   role     = "roles/run.invoker"
   member   = "allUsers"
 }
@@ -339,7 +339,7 @@ resource "google_secret_manager_secret_iam_member" "secret_access" {
     "default_admin_password" = google_secret_manager_secret.default_admin_password.id,
     "database_url"           = google_secret_manager_secret.database_url.id,
     "smtp_url"               = google_secret_manager_secret.smtp_url.id,
-    "api_secret_key"         = google_secret_manager_secret.secret_key.id
+    "api_secret_key"         = google_secret_manager_secret.api_secret_key.id
   }
   project   = data.google_project.gcp_project.project_id
   secret_id = each.value

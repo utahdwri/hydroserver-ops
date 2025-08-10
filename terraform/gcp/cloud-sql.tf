@@ -93,7 +93,7 @@ resource "google_sql_user" "db_user" {
 # ---------------------------------
 
 resource "google_secret_manager_secret" "database_url" {
-  secret_id = "hydroserver-${var.instance}-database-url"
+  secret_id = "hydroserver-${var.instance}-api-database-url"
   replication {
     user_managed {
       replicas {
@@ -116,7 +116,7 @@ resource "google_secret_manager_secret_version" "database_url_version" {
   }
 }
 
-resource "random_password" "secret_key" {
+resource "random_password" "api_secret_key" {
   length           = 50
   special          = true
   upper            = true
@@ -125,8 +125,8 @@ resource "random_password" "secret_key" {
   override_special = "!@#$%^&*()-_=+{}[]|:;\"'<>,.?/"
 }
 
-resource "google_secret_manager_secret" "secret_key" {
-  secret_id = "hydroserver-${var.instance}-secret-key"
+resource "google_secret_manager_secret" "api_secret_key" {
+  secret_id = "hydroserver-${var.instance}-api-secret-key"
   replication {
     user_managed {
       replicas {
@@ -140,9 +140,9 @@ resource "google_secret_manager_secret" "secret_key" {
   }
 }
 
-resource "google_secret_manager_secret_version" "secret_key_version" {
-  secret      = google_secret_manager_secret.secret_key.id
-  secret_data = random_password.secret_key.result
+resource "google_secret_manager_secret_version" "api_secret_key_version" {
+  secret      = google_secret_manager_secret.api_secret_key.id
+  secret_data = random_password.api_secret_key.result
 
   lifecycle {
     ignore_changes = [secret_data]

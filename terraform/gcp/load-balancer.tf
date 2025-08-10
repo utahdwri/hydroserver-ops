@@ -3,14 +3,14 @@
 # ---------------------------------
 
 resource "google_compute_backend_service" "cloudrun_backend" {
-  name                  = "hydroserver-${var.instance}-backend"
+  name                  = "hydroserver-api-${var.instance}-backend"
   protocol              = "HTTP"
   load_balancing_scheme = "EXTERNAL_MANAGED"
   security_policy       = google_compute_security_policy.security_policy.id
   timeout_sec           = 30
 
   backend {
-    group = google_compute_region_network_endpoint_group.hydroserver_neg.id
+    group = google_compute_region_network_endpoint_group.api_neg.id
   }
 }
 
@@ -36,7 +36,7 @@ resource "google_compute_backend_bucket" "media_bucket_backend" {
 # ---------------------------------
 
 resource "google_compute_url_map" "url_map" {
-  name = "hydroserver-${var.instance}-url-map"
+  name = "hydroserver-api-${var.instance}-url-map"
   default_service = google_compute_backend_service.cloudrun_backend.self_link
 
   host_rule {

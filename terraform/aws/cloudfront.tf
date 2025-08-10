@@ -17,8 +17,8 @@ resource "aws_cloudfront_distribution" "url_map" {
   }
 
   origin {
-    origin_id   = "hydroserver"
-    domain_name = aws_apprunner_service.hydroserver.service_url
+    origin_id   = "api-service"
+    domain_name = aws_apprunner_service.api.service_url
 
     custom_origin_config {
       origin_protocol_policy = "https-only"
@@ -29,7 +29,7 @@ resource "aws_cloudfront_distribution" "url_map" {
   }
 
   default_cache_behavior {
-    target_origin_id = "hydroserver"
+    target_origin_id = "api-service"
     viewer_protocol_policy = "redirect-to-https"
 
     allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
@@ -131,7 +131,7 @@ resource "aws_cloudfront_key_group" "cloudfront_key_group" {
 }
 
 resource "aws_ssm_parameter" "signing_key_id" {
-  name        = "/hydroserver-${var.instance}/signing-key-id"
+  name        = "/hydroserver-${var.instance}-api/signing-key-id"
   type        = "String"
   value       = aws_cloudfront_public_key.cloudfront_pub_key.id
 
@@ -141,7 +141,7 @@ resource "aws_ssm_parameter" "signing_key_id" {
 }
 
 resource "aws_ssm_parameter" "signing_key" {
-  name        = "/hydroserver-${var.instance}/signing-key"
+  name        = "/hydroserver-${var.instance}-api/signing-key"
   type        = "SecureString"
   value       = tls_private_key.cloudfront_signing_key.private_key_pem
 

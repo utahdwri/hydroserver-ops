@@ -99,7 +99,7 @@ jobs:
         run: |
           terraform apply \
           -auto-approve -input=false \
-          -target=google_artifact_registry_repository.hydroserver \
+          -target=google_artifact_registry_repository.api_repository \
           -var "instance=${{ github.event.inputs.environment }}" \
           -var "region=${{ vars.GCP_REGION }}" \
           -var "project_id=${{ vars.GCP_PROJECT_ID }}" \
