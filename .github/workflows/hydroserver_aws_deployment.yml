@@ -206,12 +206,11 @@ jobs:
       - name: Run HydroServer Setup Commands
         run: |
           LOAD_DEFAULT_DATA="${{ vars.LOAD_DEFAULT_DATA || 'False' }}"
-          ENV_JSON="[ {\"name\":\"LOAD_DEFAULT_DATA\", \"value\":\"$LOAD_DEFAULT_DATA\"} ]"
           aws batch submit-job \
             --job-name hydroserver-init-${{ github.event.inputs.environment }} \
             --job-queue hydroserver-init-${{ github.event.inputs.environment }} \
             --job-definition hydroserver-init-${{ github.event.inputs.environment }} \
-            --container-overrides environment="$ENV_JSON"
+            --container-overrides "{\"environment\":[{\"name\":\"LOAD_DEFAULT_DATA\",\"value\":\"$LOAD_DEFAULT_DATA\"}]}"
       - name: Deploy AWS App Runner Service
         run: |
           APP_RUNNER_SERVICE_NAME="hydroserver-api-${{ github.event.inputs.environment }}"
@@ -282,5 +281,6 @@ jobs:
           -var "region=${{ vars.AWS_REGION }}" \
           -var "proxy_base_url=${{ vars.PROXY_BASE_URL }}" \
           -var "acm_certificate_arn=${{ vars.AWS_ACM_CERTIFICATE_ARN }}"
+
 
 
