@@ -150,6 +150,7 @@ resource "google_cloud_run_v2_job" "hydroserver_init" {
   location = var.region
 
   template {
+    max_retries = 0
     template {
       containers {
         image = "${var.region}-docker.pkg.dev/${data.google_project.gcp_project.project_id}/${var.instance}/hydroserver-api-services:latest"
@@ -368,6 +369,6 @@ resource "google_storage_bucket_iam_member" "cloud_run_storage_bucket_access" {
     google_storage_bucket.media_bucket.name,
   ])
   bucket = each.value
-  role   = "roles/storage.objectAdmin"
+  role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.cloud_run_service_account.email}"
 }
