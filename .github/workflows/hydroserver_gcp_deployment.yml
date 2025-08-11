@@ -186,11 +186,10 @@ jobs:
           gcloud run jobs execute hydroserver-init-${{ env.INSTANCE }} \
             --region ${{ vars.GCP_REGION }} \
             --command "sh" \
-            --args "-c", \
-              "python manage.py migrate && \
-               python manage.py setup_admin_user && \
-               python manage.py load_default_data && \
-               python manage.py collectstatic --noinput --clear"
+            --args "-c;python manage.py migrate && \
+                     python manage.py setup_admin_user && \
+                     python manage.py load_default_data && \
+                     python manage.py collectstatic --noinput --clear"
       - name: Update Cloud Run Web Service
         run: |
           ENV_VARS=""
