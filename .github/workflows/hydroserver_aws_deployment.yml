@@ -203,6 +203,15 @@ jobs:
                 echo "Skipping $PARAM as it is not defined."
             fi
           done
+      - name: Run HydroServer Setup Commands
+        run: |
+          LOAD_DEFAULT_DATA="${{ vars.LOAD_DEFAULT_DATA || 'False' }}"
+          ENV_JSON="[ {\"name\":\"LOAD_DEFAULT_DATA\", \"value\":\"$LOAD_DEFAULT_DATA\"} ]"
+          aws batch submit-job \
+            --job-name hydroserver-init-${{ github.event.inputs.environment }} \
+            --job-queue hydroserver-init-${{ github.event.inputs.environment }} \
+            --job-definition hydroserver-init-${{ github.event.inputs.environment }} \
+            --container-overrides environment="$ENV_JSON"
       - name: Deploy AWS App Runner Service
         run: |
           APP_RUNNER_SERVICE_NAME="hydroserver-api-${{ github.event.inputs.environment }}"

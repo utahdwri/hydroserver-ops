@@ -228,6 +228,10 @@ resource "google_cloud_run_v2_job" "hydroserver_init" {
           value = "gcp"
         }
         env {
+          name  = "LOAD_DEFAULT_DATA"
+          value = "False"
+        }
+        env {
           name  = "STATIC_BUCKET_NAME"
           value = google_storage_bucket.static_bucket.name
         }
