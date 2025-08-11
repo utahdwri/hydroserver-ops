@@ -44,9 +44,18 @@ resource "aws_batch_job_definition" "hydroserver_init" {
 
   container_properties = jsonencode({
     image = "${aws_ecr_repository.api_repository.repository_url}:latest"
-    vcpus = 1
-    memory = 2048
     command = ["/bin/sh", "-c", "set -e; python manage.py migrate && python manage.py setup_admin_user && python manage.py load_default_data && python manage.py collectstatic --noinput --clear"]
+
+    resourceRequirements = [
+      {
+        type  = "VCPU"
+        value = "1"
+      },
+      {
+        type  = "MEMORY"
+        value = "2048"
+      }
+    ]
 
     environment = [
       { name = "DEPLOYED", value = "True" },
