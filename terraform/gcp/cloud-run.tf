@@ -150,7 +150,6 @@ resource "google_cloud_run_v2_job" "hydroserver_init" {
   location = var.region
 
   template {
-    max_retries = 0
     template {
       containers {
         image = "${var.region}-docker.pkg.dev/${data.google_project.gcp_project.project_id}/${var.instance}/hydroserver-api-services:latest"
@@ -239,6 +238,7 @@ resource "google_cloud_run_v2_job" "hydroserver_init" {
       }
 
       service_account = google_service_account.cloud_run_service_account.email
+      max_retries = 0
 
       volumes {
         name = "cloudsql"
