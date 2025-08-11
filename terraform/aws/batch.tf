@@ -72,7 +72,7 @@ resource "aws_batch_job_definition" "hydroserver_init" {
       { name = "DEFAULT_SUPERUSER_PASSWORD", valueFrom = aws_ssm_parameter.admin_password.arn }
     ]
 
-    executionRoleArn = aws_iam_role.app_runner_access_role.arn
+    executionRoleArn = aws_iam_role.ecs_task_execution_role.arn
     jobRoleArn = aws_iam_role.app_runner_service_role.arn
   })
 
