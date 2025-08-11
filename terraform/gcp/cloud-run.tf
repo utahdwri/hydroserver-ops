@@ -153,6 +153,13 @@ resource "google_cloud_run_v2_job" "hydroserver_init" {
     template {
       containers {
         image = "${var.region}-docker.pkg.dev/${data.google_project.gcp_project.project_id}/${var.instance}/hydroserver-api-services:latest"
+        command = ["sh"]
+        args    = ["-c", <<-EOT
+          python manage.py migrate &&
+          python manage.py setup_admin_user &&
+          python manage.py load_default_data &&
+          python manage.py collectstatic --noinput --clear
+        EOT]
 
         resources {
           limits = {
