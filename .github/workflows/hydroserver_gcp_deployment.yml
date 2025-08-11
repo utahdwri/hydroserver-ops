@@ -183,7 +183,7 @@ jobs:
           echo -n "${{ secrets.SMTP_URL }}" | gcloud secrets versions add "hydroserver-${{ github.event.inputs.environment }}-api-smtp-url" --data-file=-
       - name: Run HydroServer Setup Commands
         run: |
-          gcloud run jobs execute hydroserver-init-${INSTANCE} --region ${GCP_REGION}
+          gcloud run jobs execute hydroserver-init-${{ github.event.inputs.environment }} --region ${{ vars.GCP_REGION }}
       - name: Update Cloud Run Web Service
         run: |
           ENV_VARS=""
