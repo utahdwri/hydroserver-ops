@@ -24,6 +24,7 @@ resource "aws_apprunner_service" "api" {
       image_identifier      = "${aws_ecr_repository.api_repository.repository_url}:latest"
       image_repository_type = "ECR"
       image_configuration {
+        start_command = "sh -c 'gunicorn --bind 0.0.0.0:8000 --workers 3 hydroserver.wsgi:application'"
         port = "8000"
         runtime_environment_secrets = {
           DATABASE_URL               = aws_ssm_parameter.database_url.arn
