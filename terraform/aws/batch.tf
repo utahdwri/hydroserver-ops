@@ -118,6 +118,27 @@ resource "aws_iam_role_policy_attachment" "batch_service_role_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
 
+resource "aws_iam_role_policy" "batch_service_role_ecs_delete" {
+  role = aws_iam_role.batch_service_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowECSClusterDelete",
+        Effect = "Allow",
+        Action = [
+          "ecs:List*",
+          "ecs:Get*",
+          "ecs:Describe*",
+          "ecs:DeleteCluster"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 
 # ---------------------------------
 # AWS ECS Execution Role
