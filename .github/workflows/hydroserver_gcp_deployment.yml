@@ -188,7 +188,7 @@ jobs:
           [ -n "${{ vars.LOAD_DEFAULT_DATA }}" ] && ENV_VARS+="LOAD_DEFAULT_DATA=${{ vars.LOAD_DEFAULT_DATA }},"
           ENV_VARS=${ENV_VARS%,}
           gcloud run jobs execute hydroserver-init-${{ github.event.inputs.environment }} \
-            --region ${{ vars.GCP_REGION }}
+            --region ${{ vars.GCP_REGION }} \
             ${ENV_VARS:+--update-env-vars "$ENV_VARS"}
       - name: Update Cloud Run Web Service
         run: |
