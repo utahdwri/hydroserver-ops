@@ -148,6 +148,7 @@ resource "google_secret_manager_secret_version" "smtp_url_version" {
 resource "google_cloud_run_v2_job" "hydroserver_init" {
   name     = "hydroserver-init-${var.instance}"
   location = var.region
+  deletion_protection  = false
 
   template {
     template {
