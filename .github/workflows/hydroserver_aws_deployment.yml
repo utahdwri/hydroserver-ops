@@ -61,7 +61,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod  # TODO
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -129,7 +129,7 @@ jobs:
           -var "tag_key=${{ vars.AWS_TAG_KEY || 'hydroserver-instance' }}" \
           -var "tag_value=${{ vars.AWS_TAG_VALUE || github.event.inputs.environment }}"
 
-  deploy-hydroserver-api:
+  deploy-hydroserver:
     needs: 
       - check-environment-variables
       - initialize-hydroserver
@@ -149,7 +149,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod  # TODO
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -203,90 +203,19 @@ jobs:
                 echo "Skipping $PARAM as it is not defined."
             fi
           done
+      - name: Run HydroServer Setup Commands
+        run: |
+          LOAD_DEFAULT_DATA="${{ vars.LOAD_DEFAULT_DATA || 'False' }}"
+          aws batch submit-job \
+            --job-name hydroserver-init-${{ github.event.inputs.environment }} \
+            --job-queue hydroserver-init-${{ github.event.inputs.environment }} \
+            --job-definition hydroserver-init-${{ github.event.inputs.environment }} \
+            --container-overrides "{\"environment\":[{\"name\":\"LOAD_DEFAULT_DATA\",\"value\":\"$LOAD_DEFAULT_DATA\"}]}"
       - name: Deploy AWS App Runner Service
         run: |
           APP_RUNNER_SERVICE_NAME="hydroserver-api-${{ github.event.inputs.environment }}"
           SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE_NAME'].ServiceArn" --output text)
           aws apprunner start-deployment --service-arn "$SERVICE_ARN"
-
-  deploy-hydroserver-data-mgmt-app:
-    needs: 
-      - check-environment-variables
-      - initialize-hydroserver
-    if: >
-      always() && 
-      !contains(needs.*.result, 'failure') &&
-      (
-        (github.event.inputs.action == 'Initialize HydroServer Deployment' && needs.initialize-hydroserver.result == 'success') ||
-        (github.event.inputs.action == 'Update HydroServer Deployment' && needs.check-environment-variables.result == 'success')
-      )
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/${{ vars.AWS_IAM_ROLE }}
-          role-session-name: create-hydroserver-resources
-          aws-region: ${{ vars.AWS_REGION }}
-      - name: Get Latest HydroServer Version
-        id: get_latest_tag
-        run: echo "tag=$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-data-management-app/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
-      - name: Resolve Tag to Checkout
-        id: resolve_ref
-        run: |
-          if [ -z "${{ github.event.inputs.release }}" ] || [ "${{ github.event.inputs.release }}" = "latest" ]; then
-            echo "ref=${{ steps.get_latest_tag.outputs.tag }}" >> $GITHUB_OUTPUT
-          else
-            echo "ref=${{ github.event.inputs.release }}" >> $GITHUB_OUTPUT
-          fi
-      - name: Checkout Ops Repo
-        uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Checkout Data Management App Repo
-        uses: actions/checkout@v4
-        with:
-          repository: hydroserver2/hydroserver-data-management-app
-          ref: ${{ steps.resolve_ref.outputs.ref }}
-          path: data_mgmt
-      - name: Setup Node 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: npm
-          cache-dependency-path: data_mgmt/package-lock.json
-      - name: Install Dependencies
-        working-directory: ./data_mgmt
-        run: npm ci
-      - name: Configure Environment Variables
-        working-directory: ./data_mgmt
-        run: |
-          cat << EOF > .env
-          VITE_APP_VERSION=${{ github.event.inputs.hydroserver-version || steps.get_latest_tag.outputs.tag }}
-          VITE_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
-          VITE_APP_GOOGLE_MAPS_MAP_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
-          VITE_APP_PROXY_BASE_URL=${{ vars.PROXY_BASE_URL }}
-      - name: Merge App Config
-        working-directory: ./data_mgmt
-        run: |
-          SOURCE="${{ github.workspace }}/config/data_mgmt/${{ github.event.inputs.environment }}"
-          TARGET="./src/config"
-          if [ ! -d "$SOURCE" ]; then
-            echo "No per-environment override directory found at $SOURCE"
-          elif [ -z "$(ls -A "$SOURCE")" ]; then
-            echo "Override directory exists but is empty: $SOURCE"
-          else
-            echo "Copying overrides from $SOURCE to $TARGET"
-            cp -r "$SOURCE/"* "$TARGET/"
-          fi
-      - name: Build Data Management App
-        working-directory: ./data_mgmt
-        run: npm run build
-      - name: Deploy to S3
-        working-directory: ./data_mgmt
-        run: |
-          aws s3 sync ./dist s3://hydroserver-data-mgmt-app-${{ github.event.inputs.environment }}-${{ vars.AWS_ACCOUNT_ID }}/ --delete
       - name: Get CloudFront Distribution ID
         run: |
           DISTRIBUTION_IDS=$(aws cloudfront list-distributions --query "DistributionList.Items[*].Id" --output text)
@@ -317,7 +246,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod  # TODO
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -352,3 +281,6 @@ jobs:
           -var "region=${{ vars.AWS_REGION }}" \
           -var "proxy_base_url=${{ vars.PROXY_BASE_URL }}" \
           -var "acm_certificate_arn=${{ vars.AWS_ACM_CERTIFICATE_ARN }}"
+
+
+

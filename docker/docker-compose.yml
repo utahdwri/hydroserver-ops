@@ -1,0 +1,89 @@
+version: '3.9'
+
+services:
+  x-hydroserver-base: &hydroserver_base
+    image: ghcr.io/hydroserver2/hydroserver-api-services:latest
+    environment:
+      DEPLOYMENT_BACKEND: local_prod
+      SECRET_KEY: changeme
+      DEBUG: False
+      PROXY_BASE_URL: https://hydroserver.example.com
+      DATABASE_URL: postgres://hsdbadmin:changeme@database:5432/hydroserver
+      SMTP_URL: smtp://example.com:1025
+      DEFAULT_FROM_EMAIL: accounts@example.com
+      ACCOUNT_SIGNUP_ENABLED: True
+      ACCOUNT_OWNERSHIP_ENABLED: True
+    volumes:
+      - hydroserver_static:/app/static
+      - hydroserver_media:/app/media
+    networks:
+      - hydroserver_network
+
+  database:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hydroserver
+      POSTGRES_USER: hsdbadmin
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hydroserver_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hsdbadmin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  hydroserver-web:
+    <<: *hydroserver_base
+    container_name: hydroserver_web
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      hydroserver-init:
+        condition: service_completed_successfully
+    command: >
+      sh -c "gunicorn --bind 0.0.0.0:8000 --workers 3 hydroserver.wsgi:application"
+
+  hydroserver-init:
+    <<: *hydroserver_base
+    container_name: hydroserver_init
+    depends_on:
+      database:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py setup_admin_user &&
+             python manage.py load_default_data &&
+             python manage.py collectstatic --noinput"
+    restart: "no"
+
+  nginx:
+    image: nginx:1.25
+    container_name: hydroserver_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - hydroserver_static:/static:ro
+      - hydroserver_media:/media:ro
+    depends_on:
+      hydroserver-web:
+        condition: service_started
+    networks:
+      - hydroserver_network
+
+volumes:
+  postgres_data:
+  hydroserver_static:
+  hydroserver_media:
+
+networks:
+  hydroserver_network:
+    driver: bridge

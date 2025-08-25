@@ -63,7 +63,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v2
         with:
@@ -134,7 +134,7 @@ jobs:
           -var "label_key=${{ vars.GCP_LABEL_KEY || 'hydroserver-instance' }}" \
           -var "label_value=${{ vars.GCP_LABEL_VALUE || github.event.inputs.environment }}"
 
-  deploy-hydroserver-api:
+  deploy-hydroserver:
     needs: 
       - check-environment-variables
       - initialize-hydroserver
@@ -154,7 +154,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v2
         with:
@@ -181,7 +181,16 @@ jobs:
       - name: Update Cloud Run Secrets
         run: |
           echo -n "${{ secrets.SMTP_URL }}" | gcloud secrets versions add "hydroserver-${{ github.event.inputs.environment }}-api-smtp-url" --data-file=-
-      - name: Update Cloud Run Service
+      - name: Run HydroServer Setup Commands
+        run: |
+          ENV_VARS=""
+          [ -n "${{ vars.GCP_PROJECT_ID }}" ] && ENV_VARS+="GS_PROJECT_ID=${{ vars.GCP_PROJECT_ID }},"
+          [ -n "${{ vars.LOAD_DEFAULT_DATA }}" ] && ENV_VARS+="LOAD_DEFAULT_DATA=${{ vars.LOAD_DEFAULT_DATA }},"
+          ENV_VARS=${ENV_VARS%,}
+          gcloud run jobs execute hydroserver-init-${{ github.event.inputs.environment }} \
+            --region ${{ vars.GCP_REGION }} \
+            ${ENV_VARS:+--update-env-vars "$ENV_VARS"}
+      - name: Update Cloud Run Web Service
         run: |
           ENV_VARS=""
           [ -n "${{ vars.GCP_PROJECT_ID }}" ] && ENV_VARS+="GS_PROJECT_ID=${{ vars.GCP_PROJECT_ID }},"
@@ -196,96 +205,6 @@ jobs:
             --region ${{ vars.GCP_REGION }} \
             ${ENV_VARS:+--update-env-vars "$ENV_VARS"}
 
-  deploy-hydroserver-data-mgmt-app:
-    needs: 
-      - check-environment-variables
-      - initialize-hydroserver
-    if: >
-      always() && 
-      !contains(needs.*.result, 'failure') &&
-      (
-        (github.event.inputs.action == 'Initialize HydroServer Deployment' && needs.initialize-hydroserver.result == 'success') ||
-        (github.event.inputs.action == 'Update HydroServer Deployment' && needs.check-environment-variables.result == 'success')
-      )
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    defaults:
-      run:
-        working-directory: ./terraform/gcp
-    steps:
-      - name: Checkout Ops Repo
-        uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Configure GCP Credentials
-        uses: google-github-actions/auth@v2
-        with:
-          project_id: ${{ vars.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ vars.GCP_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-      - name: Set up GCP SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: ${{ vars.GCP_PROJECT_ID }}
-      - name: Get Latest HydroServer Version
-        id: get_latest_tag
-        run: echo "tag=$(curl -sL https://api.github.com/repos/hydroserver2/hydroserver-data-management-app/releases/latest | jq -r '.tag_name')" >> $GITHUB_OUTPUT
-      - name: Resolve Tag to Checkout
-        id: resolve_ref
-        run: |
-          if [ -z "${{ github.event.inputs.release }}" ] || [ "${{ github.event.inputs.release }}" = "latest" ]; then
-            echo "ref=${{ steps.get_latest_tag.outputs.tag }}" >> $GITHUB_OUTPUT
-          else
-            echo "ref=${{ github.event.inputs.release }}" >> $GITHUB_OUTPUT
-          fi
-      - name: Checkout Ops Repo
-        uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Checkout Data Management App Repo
-        uses: actions/checkout@v4
-        with:
-          repository: hydroserver2/hydroserver-data-management-app
-          ref: ${{ steps.resolve_ref.outputs.ref }}
-          path: data_mgmt
-      - name: Setup Node 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: npm
-          cache-dependency-path: data_mgmt/package-lock.json
-      - name: Install Dependencies
-        working-directory: ./data_mgmt
-        run: npm ci
-      - name: Configure Environment Variables
-        working-directory: ./data_mgmt
-        run: |
-          cat << EOF > .env
-          VITE_APP_VERSION=${{ github.event.inputs.release || steps.get_latest_tag.outputs.tag }}
-          VITE_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
-          VITE_APP_GOOGLE_MAPS_MAP_ID=${{ secrets.GOOGLE_MAPS_MAP_ID }}
-          VITE_APP_PROXY_BASE_URL=${{ vars.PROXY_BASE_URL }}
-      - name: Merge App Config
-        working-directory: ./data_mgmt
-        run: |
-          SOURCE="${{ github.workspace }}/config/data_mgmt/${{ github.event.inputs.environment }}"
-          TARGET="./src/config"
-          if [ ! -d "$SOURCE" ]; then
-            echo "No per-environment override directory found at $SOURCE"
-          elif [ -z "$(ls -A "$SOURCE")" ]; then
-            echo "Override directory exists but is empty: $SOURCE"
-          else
-            echo "Copying overrides from $SOURCE to $TARGET"
-            cp -r "$SOURCE/"* "$TARGET/"
-          fi
-      - name: Build Data Management App
-        working-directory: ./data_mgmt
-        run: npm run build
-      - name: Deploy to Cloud Storage
-        working-directory: ./data_mgmt
-        run: |
-          gsutil -m rsync -r -d ./dist gs://hydroserver-data-mgmt-app-${{ github.event.inputs.environment }}-${{ vars.GCP_PROJECT_ID }}/
-
   teardown-hydroserver:
     needs: check-environment-variables
     runs-on: ubuntu-latest
@@ -298,7 +217,7 @@ jobs:
       - name: Checkout Ops Repo
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: 43-docker-prod
       - name: Configure GCP Credentials
         uses: google-github-actions/auth@v2
         with:

@@ -1,5 +1,5 @@
 # ---------------------------------
-# GCP Cloud Run Service
+# GCP Cloud Run Web Service
 # ---------------------------------
 
 resource "google_cloud_run_v2_service" "api" {
@@ -17,6 +17,8 @@ resource "google_cloud_run_v2_service" "api" {
   template {
     containers {
       image = "${var.region}-docker.pkg.dev/${data.google_project.gcp_project.project_id}/${var.instance}/hydroserver-api-services:latest"
+      command = ["sh", "-c"]
+      args    = ["gunicorn --bind 0.0.0.0:8000 --workers 3 hydroserver.wsgi:application"]
 
       resources {
         limits = {
@@ -140,6 +142,125 @@ resource "google_secret_manager_secret_version" "smtp_url_version" {
 
 
 # ---------------------------------
+# GCP Cloud Run Init Service
+# ---------------------------------
+
+resource "google_cloud_run_v2_job" "hydroserver_init" {
+  name     = "hydroserver-init-${var.instance}"
+  location = var.region
+  deletion_protection  = false
+
+  template {
+    template {
+      containers {
+        image = "${var.region}-docker.pkg.dev/${data.google_project.gcp_project.project_id}/${var.instance}/hydroserver-api-services:latest"
+        command = ["/bin/sh", "-c"]
+        args    = [<<EOT
+        set -e
+        python manage.py migrate &&
+        python manage.py setup_admin_user &&
+        python manage.py load_default_data &&
+        python manage.py collectstatic --noinput --clear
+        EOT
+        ]
+
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "2Gi"
+          }
+        }
+
+        volume_mounts {
+          name       = "cloudsql"
+          mount_path = "/cloudsql"
+        }
+
+        env {
+          name = "DEFAULT_SUPERUSER_EMAIL"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.default_admin_email.id
+              version = "latest"
+            }
+          }
+        }
+
+        env {
+          name = "DEFAULT_SUPERUSER_PASSWORD"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.default_admin_password.id
+              version = "latest"
+            }
+          }
+        }
+
+        env {
+          name = "DATABASE_URL"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.database_url.id
+              version = "latest"
+            }
+          }
+        }
+
+        env {
+          name = "SECRET_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.api_secret_key.id
+              version = "latest"
+            }
+          }
+        }
+
+        env {
+          name  = "USE_CLOUD_SQL_AUTH_PROXY"
+          value = "true"
+        }
+        env {
+          name  = "DEPLOYED"
+          value = "True"
+        }
+        env {
+          name  = "DEPLOYMENT_BACKEND"
+          value = "gcp"
+        }
+        env {
+          name  = "LOAD_DEFAULT_DATA"
+          value = "False"
+        }
+        env {
+          name  = "STATIC_BUCKET_NAME"
+          value = google_storage_bucket.static_bucket.name
+        }
+        env {
+          name  = "MEDIA_BUCKET_NAME"
+          value = google_storage_bucket.media_bucket.name
+        }
+      }
+
+      service_account = google_service_account.cloud_run_service_account.email
+      max_retries = 0
+
+      volumes {
+        name = "cloudsql"
+        cloud_sql_instance {
+          instances = [google_sql_database_instance.db_instance[0].connection_name]
+        }
+      }
+    }
+  }
+
+  labels = {
+    "${var.label_key}" = local.label_value
+  }
+}
+
+
+# ---------------------------------
 # Default Admin Credentials
 # ---------------------------------
 
@@ -253,6 +374,6 @@ resource "google_storage_bucket_iam_member" "cloud_run_storage_bucket_access" {
     google_storage_bucket.media_bucket.name,
   ])
   bucket = each.value
-  role   = "roles/storage.objectAdmin"
+  role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.cloud_run_service_account.email}"
 }

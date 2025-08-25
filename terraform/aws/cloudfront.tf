@@ -3,11 +3,6 @@
 # ---------------------------------
 
 resource "aws_cloudfront_distribution" "url_map" {
-  origin {
-    origin_id                = "data-mgmt-app"
-    domain_name              = aws_s3_bucket.data_mgmt_app_bucket.bucket_regional_domain_name
-    origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
-  }
 
   origin {
     origin_id                = "static"
@@ -34,61 +29,12 @@ resource "aws_cloudfront_distribution" "url_map" {
   }
 
   default_cache_behavior {
-    target_origin_id = "data-mgmt-app"
+    target_origin_id = "api-service"
     viewer_protocol_policy = "redirect-to-https"
 
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD", "OPTIONS"]
-
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
-
-    function_association {
-      event_type   = "viewer-request"
-      function_arn   = aws_cloudfront_function.frontend_routing.arn
-    }
-  }
-
-  ordered_cache_behavior {
-    path_pattern             = "/api/*"
     allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods           = ["GET", "HEAD"]
-    target_origin_id         = "api-service"
-    viewer_protocol_policy   = "redirect-to-https"
-    cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
+    cached_methods           = ["GET", "HEAD", "OPTIONS"]
 
-    function_association {
-      event_type     = "viewer-request"
-      function_arn   = aws_cloudfront_function.x_forward_host.arn
-    }
-  }
-
-  ordered_cache_behavior {
-    path_pattern             = "/admin/*"
-    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods           = ["GET", "HEAD"]
-    target_origin_id         = "api-service"
-    viewer_protocol_policy   = "redirect-to-https"
-    cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
-
-    function_association {
-      event_type     = "viewer-request"
-      function_arn   = aws_cloudfront_function.x_forward_host.arn
-    }
-  }
-
-  ordered_cache_behavior {
-    path_pattern             = "/accounts/*"
-    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods           = ["GET", "HEAD"]
-    target_origin_id         = "api-service"
-    viewer_protocol_policy   = "redirect-to-https"
     cache_policy_id          = data.aws_cloudfront_cache_policy.cdn_managed_caching_disabled_cache_policy.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.cdn_managed_all_viewer_origin_request_policy.id
 
@@ -215,14 +161,6 @@ data "aws_cloudfront_cache_policy" "cdn_managed_caching_disabled_cache_policy" {
 
 data "aws_cloudfront_origin_request_policy" "cdn_managed_all_viewer_origin_request_policy" {
   name = "Managed-AllViewerExceptHostHeader"
-}
-
-resource "aws_cloudfront_function" "frontend_routing" {
-  name    = "frontend-routing-${var.instance}"
-  runtime = "cloudfront-js-1.0"
-  comment = "Preserve Vue client-side routing."
-  code    = file("${path.module}/frontend-routing.js")
-  publish = true
 }
 
 resource "aws_cloudfront_function" "x_forward_host" {
