@@ -335,12 +335,12 @@ resource "google_service_account" "cloud_run_service_account" {
   project      = data.google_project.gcp_project.project_id
 }
 
-resource "google_cloud_run_service_iam_member" "public_access" {
-  location = google_cloud_run_v2_service.api.location
-  service  = google_cloud_run_v2_service.api.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
+# resource "google_cloud_run_service_iam_member" "public_access" {
+#   location = google_cloud_run_v2_service.api.location
+#   service  = google_cloud_run_v2_service.api.name
+#   role     = "roles/run.invoker"
+#   member   = "allUsers"
+# }
 
 resource "google_project_iam_member" "cloud_run_sql_access" {
   project = data.google_project.gcp_project.project_id
