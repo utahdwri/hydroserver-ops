@@ -78,19 +78,6 @@ jobs:
           -backend-config="impersonate_service_account=${{ vars.GCP_SERVICE_ACCOUNT }}" \
           -backend-config="bucket=${{ vars.TERRAFORM_BUCKET }}" \
           -backend-config="prefix=state/hydroserver_${{ github.event.inputs.environment }}"
-      - name: Terraform Import
-        run: |
-          terraform import \
-          -input=false \
-          -var "instance=${{ github.event.inputs.environment }}" \
-          -var "region=${{ vars.GCP_REGION }}" \
-          -var "project_id=${{ vars.GCP_PROJECT_ID }}" \
-          -var "proxy_base_url=${{ vars.PROXY_BASE_URL }}" \
-          -var "ssl_certificate_name=${{ vars.GCP_SSL_CERTIFICATE_NAME }}" \
-          -var "database_url=${{ secrets.DATABASE_URL || '' }}" \
-          -var "label_key=${{ vars.GCP_LABEL_KEY || 'hydroserver-instance' }}" \
-          -var "label_value=${{ vars.GCP_LABEL_VALUE || github.event.inputs.environment }}" \
-          google_compute_global_address.ip_address projects/ut-gee-wri-hydro-prod/global/addresses/hydroserver-prod-ip
       - name: Terraform Plan
         id: plan
         run: |
