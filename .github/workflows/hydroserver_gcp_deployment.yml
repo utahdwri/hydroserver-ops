@@ -80,7 +80,6 @@ jobs:
           -backend-config="prefix=state/hydroserver_${{ github.event.inputs.environment }}"
       - name: Terraform Import
         run: |
-          terraform force-unlock -force ab661b52-673c-da3a-056d-aad0ede17e05
           terraform import -input=false google_compute_global_address.ip_address projects/ut-gee-wri-hydro-prod/global/addresses/hydroserver-prod-ip
       - name: Terraform Plan
         id: plan
