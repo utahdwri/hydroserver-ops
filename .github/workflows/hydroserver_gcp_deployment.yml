@@ -78,6 +78,9 @@ jobs:
           -backend-config="impersonate_service_account=${{ vars.GCP_SERVICE_ACCOUNT }}" \
           -backend-config="bucket=${{ vars.TERRAFORM_BUCKET }}" \
           -backend-config="prefix=state/hydroserver_${{ github.event.inputs.environment }}"
+      - name: Terraform Import
+        run: |
+          terraform import google_compute_global_address.ip_address projects/ut-gee-wri-hydro-prod/global/addresses/hydroserver-prod-ip
       - name: Terraform Plan
         id: plan
         run: |
